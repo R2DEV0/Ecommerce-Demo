@@ -64,17 +64,25 @@ export default function StatsCounter({ end, duration = 2000, suffix = '', label,
   }, [hasAnimated, end, duration]);
 
   const formatNumber = (num: number): string => {
+    if (num >= 1000000) {
+      // Format millions: 2,406,124 -> 2.4M
+      return (num / 1000000).toFixed(1) + 'M';
+    } else if (num >= 1000) {
+      // Format thousands: 102,002 -> 102K
+      return (num / 1000).toFixed(0) + 'K';
+    }
     return num.toLocaleString('en-US');
   };
 
   const displayValue = formatNumber(count);
 
   return (
-    <div ref={observerRef} className={`text-center px-4 py-6 rounded-lg ${bgColor} transition-all hover:shadow-md`}>
-      <div className="text-4xl md:text-5xl lg:text-6xl font-bold text-primary-600 mb-3">
-        {displayValue}{suffix}
+    <div ref={observerRef} className={`text-center px-6 py-10 rounded-2xl ${bgColor} transition-all hover:shadow-xl hover:scale-105 border-2 border-transparent hover:border-primary-200 min-h-[180px] flex flex-col justify-center`}>
+      <div className="text-5xl md:text-6xl lg:text-7xl font-bold text-primary-600 mb-4 leading-tight">
+        <span className="block">{displayValue}</span>
+        {suffix && <span className="text-3xl md:text-4xl">{suffix}</span>}
       </div>
-      <div className="text-gray-700 font-medium text-base md:text-lg">{label}</div>
+      <div className="text-gray-700 font-bold text-base md:text-lg uppercase tracking-wider mt-auto">{label}</div>
     </div>
   );
 }

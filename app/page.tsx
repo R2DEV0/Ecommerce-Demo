@@ -56,21 +56,37 @@ export default function Home() {
         </section>
 
         {/* Stats Section */}
-        <section className="bg-white py-16 md:py-20">
+        <section className="bg-gradient-to-br from-gray-50 via-white to-gray-50 py-20 md:py-24">
           <div className="container mx-auto px-4">
-            <div className="text-center mb-12 md:mb-16">
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
                 Depth and Complexity is Growing!
               </h2>
-              <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
+              <p className="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
                 Join thousands of educators worldwide who are transforming their classrooms
               </p>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 max-w-6xl mx-auto">
-              <StatsCounter end={9} label="Countries" bgColor="bg-blue-50" />
-              <StatsCounter end={45} label="States" bgColor="bg-purple-50" />
-              <StatsCounter end={102002} label="Classrooms" bgColor="bg-indigo-50" />
-              <StatsCounter end={2406124} label="Students" bgColor="bg-pink-50" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 max-w-7xl mx-auto">
+              <StatsCounter 
+                end={9} 
+                label="Countries" 
+                bgColor="bg-gradient-to-br from-blue-50 to-blue-100" 
+              />
+              <StatsCounter 
+                end={45} 
+                label="States" 
+                bgColor="bg-gradient-to-br from-purple-50 to-purple-100" 
+              />
+              <StatsCounter 
+                end={102002} 
+                label="Classrooms" 
+                bgColor="bg-gradient-to-br from-indigo-50 to-indigo-100" 
+              />
+              <StatsCounter 
+                end={2406124} 
+                label="Students" 
+                bgColor="bg-gradient-to-br from-pink-50 to-pink-100" 
+              />
             </div>
           </div>
         </section>

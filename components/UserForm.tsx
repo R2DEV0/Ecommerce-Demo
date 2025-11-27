@@ -34,12 +34,20 @@ export default function UserForm({ user }: UserFormProps) {
     e.preventDefault();
     setError('');
 
+    // Validate password for new users
     if (!user?.id && (!password || password.length < 6)) {
       setError('Password must be at least 6 characters');
       return;
     }
 
-    if (!user?.id && password !== confirmPassword) {
+    // Validate password for existing users if password is being changed
+    if (user?.id && password && password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
+    // Check password match
+    if ((!user?.id || password) && password !== confirmPassword) {
       setError('Passwords do not match');
       return;
     }
@@ -53,13 +61,17 @@ export default function UserForm({ user }: UserFormProps) {
       
       const method = user?.id ? 'PUT' : 'POST';
 
+      const requestBody: any = { ...formData };
+      
+      // Only include password if it's provided (for new users or password reset)
+      if (password && password.trim() !== '') {
+        requestBody.password = password;
+      }
+
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          password: password || undefined,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       const data = await res.json();
@@ -79,79 +91,112 @@ export default function UserForm({ user }: UserFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-lg p-8 max-w-2xl">
+    <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-sm mb-4 text-sm">
           {error}
         </div>
       )}
 
       <div className="space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Name *
+          <label className="block text-sm font-medium text-[#1d2327] mb-2">
+            Name <span className="text-red-600">*</span>
           </label>
           <input
             type="text"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1]"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Email *
+          <label className="block text-sm font-medium text-[#1d2327] mb-2">
+            Email <span className="text-red-600">*</span>
           </label>
           <input
             type="email"
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1]"
           />
         </div>
 
-        {!user?.id && (
+        {!user?.id ? (
           <>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Password *
+              <label className="block text-sm font-medium text-[#1d2327] mb-2">
+                Password <span className="text-red-600">*</span>
               </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required={!user?.id}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1]"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Confirm Password *
+              <label className="block text-sm font-medium text-[#1d2327] mb-2">
+                Confirm Password <span className="text-red-600">*</span>
               </label>
               <input
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required={!user?.id}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1]"
               />
             </div>
           </>
+        ) : (
+          <div className="border-t border-[#c3c4c7] pt-6">
+            <h3 className="text-base font-semibold text-[#1d2327] mb-2">Reset Password</h3>
+            <p className="text-sm text-[#646970] mb-4">Leave blank to keep current password, or enter a new password to reset it.</p>
+            <div>
+              <label className="block text-sm font-medium text-[#1d2327] mb-2">
+                New Password
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                minLength={6}
+                className="w-full px-3 py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1]"
+                placeholder="Enter new password (min 6 characters)"
+              />
+            </div>
+            {password && (
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-[#1d2327] mb-2">
+                  Confirm New Password
+                </label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  minLength={6}
+                  className="w-full px-3 py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1]"
+                  placeholder="Confirm new password"
+                />
+              </div>
+            )}
+          </div>
         )}
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Role *
+          <label className="block text-sm font-medium text-[#1d2327] mb-2">
+            Role <span className="text-red-600">*</span>
           </label>
           <select
             value={formData.role}
             onChange={(e) => setFormData({ ...formData, role: e.target.value })}
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1]"
           >
             <option value="subscriber">Subscriber</option>
             <option value="manager">Manager</option>
@@ -165,25 +210,25 @@ export default function UserForm({ user }: UserFormProps) {
             id="can_add_users"
             checked={formData.can_add_users === 1}
             onChange={(e) => setFormData({ ...formData, can_add_users: e.target.checked ? 1 : 0 })}
-            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+            className="h-4 w-4 text-[#2271b1] focus:ring-[#2271b1] border-[#8c8f94] rounded"
           />
-          <label htmlFor="can_add_users" className="ml-2 block text-sm text-gray-700">
+          <label htmlFor="can_add_users" className="ml-2 block text-sm text-[#1d2327]">
             Can Add Users (allows this user to add users under them)
           </label>
         </div>
 
-        <div className="flex gap-4">
+        <div className="flex gap-2 pt-4">
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 bg-action-500 text-white py-3 rounded-lg hover:bg-action-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold shadow-lg"
+            className="bg-[#2271b1] text-white px-4 py-2 rounded-sm hover:bg-[#135e96] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-normal text-sm"
           >
             {loading ? 'Saving...' : user?.id ? 'Update User' : 'Create User'}
           </button>
           <button
             type="button"
             onClick={() => router.push('/admin/users')}
-            className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-4 py-2 border border-[#c3c4c7] rounded-sm hover:bg-[#f6f7f7] transition-colors text-sm text-[#1d2327]"
           >
             Cancel
           </button>

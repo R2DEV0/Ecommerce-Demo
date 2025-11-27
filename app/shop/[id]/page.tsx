@@ -31,7 +31,6 @@ export default function ProductPage({ params }: { params: { id: string } }) {
   const [product, setProduct] = useState<Product | null>(null);
   const [versions, setVersions] = useState<ProductVersion[]>([]);
   const [selectedVariations, setSelectedVariations] = useState<Record<string, number>>({});
-  const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -126,7 +125,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
       productName: product.name,
       productImage: product.image_url,
       price: currentPrice,
-      quantity: quantity,
+      quantity: 1,
       variations,
     });
 
@@ -265,64 +264,6 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                       ${basePrice.toFixed(2)}
                     </p>
                   )}
-                </div>
-
-                {/* Quantity Selector */}
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Quantity:
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => setQuantity(prev => Math.max(1, prev - 1))}
-                      className="w-10 h-10 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      disabled={quantity <= 1}
-                      aria-label="Decrease quantity"
-                    >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M20 12H4"
-                        />
-                      </svg>
-                    </button>
-                    <input
-                      type="number"
-                      min="1"
-                      value={quantity}
-                      onChange={(e) => {
-                        const value = parseInt(e.target.value) || 1;
-                        setQuantity(Math.max(1, value));
-                      }}
-                      className="w-20 text-center border border-gray-300 rounded-lg py-2 px-3 font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    />
-                    <button
-                      onClick={() => setQuantity(prev => prev + 1)}
-                      className="w-10 h-10 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
-                      aria-label="Increase quantity"
-                    >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 4v16m8-8H4"
-                        />
-                      </svg>
-                    </button>
-                  </div>
                 </div>
 
                 {/* Add to Cart */}
