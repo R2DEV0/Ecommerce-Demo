@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 
 interface Message {
   id: string;
@@ -10,6 +11,7 @@ interface Message {
 }
 
 export default function Chatbot() {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -37,6 +39,11 @@ export default function Chatbot() {
       inputRef.current.focus();
     }
   }, [isOpen]);
+
+  // Hide chatbot in admin panel
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;

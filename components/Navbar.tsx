@@ -12,6 +12,8 @@ export default function Navbar() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [siteLogo, setSiteLogo] = useState('/media/newlogo.jpg');
   const dropdownRef = useRef<HTMLDivElement>(null);
   const totalItems = getTotalItems();
 
@@ -23,6 +25,16 @@ export default function Navbar() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
+    
+    // Fetch site logo
+    fetch('/api/admin/settings')
+      .then(res => res.json())
+      .then(data => {
+        if (data.site_logo) {
+          setSiteLogo(data.site_logo);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   // Close dropdown when clicking outside
@@ -56,45 +68,47 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-16">
           <Link href="/" className="flex items-center h-full py-2">
             <Image
-              src="/newlogo.jpg"
+              src={siteLogo}
               alt="Depth & Complexity"
               width={200}
               height={48}
-              className="h-full w-auto object-contain"
+              className="h-full w-auto object-contain max-w-[150px] md:max-w-[200px]"
               priority
             />
           </Link>
-          <div className="flex items-center gap-4">
+          
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center gap-4">
             <Link href="/shop" className="text-gray-700 hover:text-primary-600 transition-colors">Shop</Link>
             <Link href="/courses" className="text-gray-700 hover:text-primary-600 transition-colors">Courses</Link>
             <Link href="/announcements" className="text-gray-700 hover:text-primary-600 transition-colors">Announcements</Link>
             <Link href="/webinars" className="text-gray-700 hover:text-primary-600 transition-colors">Webinars</Link>
             
-            {/* Cart Icon */}
-            <button
-              onClick={toggleCart}
-              className="relative text-gray-700 hover:text-primary-600 transition-colors"
-              aria-label="Shopping cart"
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            {/* Cart Icon - Only show if cart has items */}
+            {totalItems > 0 && (
+              <button
+                onClick={toggleCart}
+                className="relative text-gray-700 hover:text-primary-600 transition-colors"
+                aria-label="Shopping cart"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                />
-              </svg>
-              {totalItems > 0 && (
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                  />
+                </svg>
                 <span className="absolute -top-2 -right-2 bg-action-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
                   {totalItems > 9 ? '9+' : totalItems}
                 </span>
-              )}
-            </button>
+              </button>
+            )}
 
             {user ? (
               <div className="relative" ref={dropdownRef}>
@@ -158,7 +172,136 @@ export default function Navbar() {
               </>
             )}
           </div>
+
+          {/* Mobile Menu Button */}
+          <div className="md:hidden flex items-center gap-2">
+            {totalItems > 0 && (
+              <button
+                onClick={toggleCart}
+                className="relative text-gray-700 hover:text-primary-600 transition-colors"
+                aria-label="Shopping cart"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                  />
+                </svg>
+                <span className="absolute -top-2 -right-2 bg-action-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                  {totalItems > 9 ? '9+' : totalItems}
+                </span>
+              </button>
+            )}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="text-gray-700 hover:text-primary-600 transition-colors p-2"
+              aria-label="Menu"
+            >
+              {mobileMenuOpen ? (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              )}
+            </button>
+          </div>
         </div>
+
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-gray-200 py-4">
+            <div className="flex flex-col space-y-3">
+              <Link
+                href="/shop"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-4 py-2 text-gray-700 hover:text-primary-600 hover:bg-gray-50 transition-colors"
+              >
+                Shop
+              </Link>
+              <Link
+                href="/courses"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-4 py-2 text-gray-700 hover:text-primary-600 hover:bg-gray-50 transition-colors"
+              >
+                Courses
+              </Link>
+              <Link
+                href="/announcements"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-4 py-2 text-gray-700 hover:text-primary-600 hover:bg-gray-50 transition-colors"
+              >
+                Announcements
+              </Link>
+              <Link
+                href="/webinars"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-4 py-2 text-gray-700 hover:text-primary-600 hover:bg-gray-50 transition-colors"
+              >
+                Webinars
+              </Link>
+              {user ? (
+                <>
+                  <div className="px-4 py-2 border-t border-gray-200 mt-2">
+                    <p className="text-sm font-semibold text-gray-900">{user.name}</p>
+                    <p className="text-xs text-gray-500">{user.email}</p>
+                  </div>
+                  <Link
+                    href={`/profile/${user.id}`}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="px-4 py-2 text-gray-700 hover:text-primary-600 hover:bg-gray-50 transition-colors"
+                  >
+                    Profile
+                  </Link>
+                  {user.role === 'admin' && (
+                    <Link
+                      href="/admin"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="px-4 py-2 text-gray-700 hover:text-primary-600 hover:bg-gray-50 transition-colors"
+                    >
+                      Admin Panel
+                    </Link>
+                  )}
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setMobileMenuOpen(false);
+                    }}
+                    className="px-4 py-2 text-left text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="px-4 py-2 text-gray-700 hover:text-primary-600 hover:bg-gray-50 transition-colors"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    href="/register"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="mx-4 px-4 py-2 bg-action-500 text-white rounded-lg hover:bg-action-600 transition-colors font-semibold text-center"
+                  >
+                    Sign Up
+                  </Link>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   );

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Toast from './Toast';
 
 interface Webinar {
   id?: number;
@@ -21,6 +22,7 @@ export default function WebinarForm({ webinar }: WebinarFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
   
   // Format date for input field (YYYY-MM-DDTHH:mm)
   const formatDateTimeForInput = (dateTime: string) => {
@@ -81,8 +83,11 @@ export default function WebinarForm({ webinar }: WebinarFormProps) {
         return;
       }
 
-      router.push('/admin/webinars');
-      router.refresh();
+      setSuccess(true);
+      setTimeout(() => {
+        router.push('/admin/webinars');
+        router.refresh();
+      }, 1000);
     } catch (err) {
       setError('An error occurred. Please try again.');
       setLoading(false);
@@ -90,55 +95,67 @@ export default function WebinarForm({ webinar }: WebinarFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-lg p-8 max-w-4xl">
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
-        </div>
+    <>
+      {success && (
+        <Toast
+          message={webinar?.id ? 'Webinar updated successfully!' : 'Webinar created successfully!'}
+          type="success"
+          onClose={() => setSuccess(false)}
+        />
       )}
+      
+      {error && (
+        <Toast
+          message={error}
+          type="error"
+          onClose={() => setError('')}
+        />
+      )}
+      
+      <form onSubmit={handleSubmit} className="w-full">
 
-      <div className="space-y-6">
+      <div className="space-y-3 md:space-y-4 lg:space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Title *
+          <label className="block text-xs md:text-sm font-medium text-[#1d2327] mb-1 md:mb-2">
+            Title <span className="text-red-600">*</span>
           </label>
           <input
             type="text"
             value={formData.title}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="w-full px-2 py-1.5 md:px-3 md:py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1] text-sm"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-xs md:text-sm font-medium text-[#1d2327] mb-1 md:mb-2">
             Description
           </label>
           <textarea
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             rows={4}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="w-full px-2 py-1.5 md:px-3 md:py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1] text-sm"
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Date & Time *
+            <label className="block text-xs md:text-sm font-medium text-[#1d2327] mb-1 md:mb-2">
+              Date & Time <span className="text-red-600">*</span>
             </label>
             <input
               type="datetime-local"
               value={formData.date_time}
               onChange={(e) => setFormData({ ...formData, date_time: e.target.value })}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-2 py-1.5 md:px-3 md:py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1] text-sm"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-xs md:text-sm font-medium text-[#1d2327] mb-1 md:mb-2">
               Duration (minutes)
             </label>
             <input
@@ -146,13 +163,13 @@ export default function WebinarForm({ webinar }: WebinarFormProps) {
               min="1"
               value={formData.duration}
               onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) || 60 })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-2 py-1.5 md:px-3 md:py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1] text-sm"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-xs md:text-sm font-medium text-[#1d2327] mb-1 md:mb-2">
             Meeting URL
           </label>
           <input
@@ -160,18 +177,18 @@ export default function WebinarForm({ webinar }: WebinarFormProps) {
             value={formData.meeting_url}
             onChange={(e) => setFormData({ ...formData, meeting_url: e.target.value })}
             placeholder="https://zoom.us/j/..."
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="w-full px-2 py-1.5 md:px-3 md:py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1] text-sm"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-xs md:text-sm font-medium text-[#1d2327] mb-1 md:mb-2">
             Status
           </label>
           <select
             value={formData.status}
             onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="w-full px-2 py-1.5 md:px-3 md:py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1] text-sm"
           >
             <option value="scheduled">Scheduled</option>
             <option value="completed">Completed</option>
@@ -179,24 +196,25 @@ export default function WebinarForm({ webinar }: WebinarFormProps) {
           </select>
         </div>
 
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-2 md:gap-4 pt-3 md:pt-4">
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 bg-action-500 text-white py-3 rounded-lg hover:bg-action-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold shadow-lg"
+            className="flex-1 bg-[#2271b1] text-white px-3 py-2 md:px-4 md:py-2 rounded-sm hover:bg-[#135e96] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-normal text-xs md:text-sm"
           >
             {loading ? 'Saving...' : webinar?.id ? 'Update Webinar' : 'Create Webinar'}
           </button>
           <button
             type="button"
             onClick={() => router.push('/admin/webinars')}
-            className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-3 py-2 md:px-4 md:py-2 border border-[#c3c4c7] rounded-sm hover:bg-[#f6f7f7] transition-colors text-xs md:text-sm text-[#1d2327]"
           >
             Cancel
           </button>
         </div>
       </div>
     </form>
+    </>
   );
 }
 

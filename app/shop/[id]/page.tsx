@@ -149,7 +149,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
     <>
       <Navbar />
       <div className="min-h-screen bg-gray-50">
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-4 md:py-8">
           <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
             <div className="md:flex">
               {product.image_url && (
@@ -161,21 +161,21 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                   />
                 </div>
               )}
-              <div className={`p-8 ${product.image_url ? 'md:w-1/2' : 'w-full'}`}>
-                <h1 className="text-3xl font-bold mb-4">{product.name}</h1>
-                <p className="text-gray-600 mb-6">{product.description}</p>
+              <div className={`p-4 md:p-8 ${product.image_url ? 'md:w-1/2' : 'w-full'}`}>
+                <h1 className="text-2xl md:text-3xl font-bold mb-3 md:mb-4">{product.name}</h1>
+                <p className="text-sm md:text-base text-gray-600 mb-4 md:mb-6">{product.description}</p>
                 
                 {/* Variations */}
                 {Object.keys(versionsByType).length > 0 && (
-                  <div className="mb-6 space-y-4">
+                  <div className="mb-4 md:mb-6 space-y-3 md:space-y-4">
                     {Object.entries(versionsByType).map(([type, typeVersions]) => (
                       <div key={type}>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
                           {getVariationTypeLabel(type)}:
                         </label>
                         {type === 'color' ? (
                           // Color swatches
-                          <div className="flex flex-wrap gap-2">
+                          <div className="flex flex-wrap gap-2 items-center">
                             {typeVersions.map((version) => {
                               const isSelected = selectedVariations[type] === version.id;
                               const colorValue = version.attribute_value || version.name.toLowerCase();
@@ -183,7 +183,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                                 <button
                                   key={version.id}
                                   onClick={() => handleVariationSelect(type, version.id)}
-                                  className={`relative w-12 h-12 rounded-full border-2 transition-all ${
+                                  className={`relative w-10 h-10 md:w-12 md:h-12 rounded-full border-2 transition-all ${
                                     isSelected 
                                       ? 'border-primary-600 ring-2 ring-primary-200' 
                                       : 'border-gray-300 hover:border-gray-400'
@@ -209,7 +209,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                                 </button>
                               );
                             })}
-                            <div className="flex items-center ml-2 text-sm text-gray-600">
+                            <div className="flex items-center ml-2 text-xs md:text-sm text-gray-600">
                               {selectedVariations[type] && (
                                 <span>
                                   {typeVersions.find(v => v.id === selectedVariations[type])?.name}
@@ -227,7 +227,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                                 <button
                                   key={version.id}
                                   onClick={() => handleVariationSelect(type, version.id)}
-                                  className={`px-4 py-2 rounded-lg border-2 transition-all ${
+                                  className={`px-3 py-2 md:px-4 md:py-2 rounded-lg border-2 transition-all text-xs md:text-sm ${
                                     isSelected
                                       ? 'border-primary-600 bg-primary-50 text-primary-700'
                                       : 'border-gray-300 hover:border-gray-400 text-gray-700'
@@ -255,12 +255,12 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                 )}
 
                 {/* Price */}
-                <div className="mb-6">
-                  <p className="text-3xl font-bold text-primary-600 mb-2">
+                <div className="mb-4 md:mb-6">
+                  <p className="text-2xl md:text-3xl font-bold text-primary-600 mb-2">
                     ${currentPrice.toFixed(2)}
                   </p>
                   {currentPrice !== basePrice && (
-                    <p className="text-sm text-gray-500 line-through">
+                    <p className="text-xs md:text-sm text-gray-500 line-through">
                       ${basePrice.toFixed(2)}
                     </p>
                   )}
@@ -269,7 +269,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                 {/* Add to Cart */}
                 <button
                   onClick={handleAddToCart}
-                  className="w-full bg-action-500 text-white py-3 rounded-lg hover:bg-action-600 transition-colors font-semibold shadow-lg"
+                  className="w-full bg-action-500 text-white py-2.5 md:py-3 rounded-lg hover:bg-action-600 transition-colors font-semibold shadow-lg text-sm md:text-base"
                 >
                   Add to Cart
                 </button>

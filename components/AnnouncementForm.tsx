@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Toast from './Toast';
 
 interface Announcement {
   id?: number;
@@ -18,6 +19,7 @@ export default function AnnouncementForm({ announcement }: AnnouncementFormProps
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
   const [formData, setFormData] = useState<Announcement>({
     title: announcement?.title || '',
     content: announcement?.content || '',
@@ -50,8 +52,11 @@ export default function AnnouncementForm({ announcement }: AnnouncementFormProps
         return;
       }
 
-      router.push('/admin/announcements');
-      router.refresh();
+      setSuccess(true);
+      setTimeout(() => {
+        router.push('/admin/announcements');
+        router.refresh();
+      }, 1000);
     } catch (err) {
       setError('An error occurred. Please try again.');
       setLoading(false);
@@ -59,72 +64,85 @@ export default function AnnouncementForm({ announcement }: AnnouncementFormProps
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-lg p-8 max-w-4xl">
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
-        </div>
+    <>
+      {success && (
+        <Toast
+          message={announcement?.id ? 'Announcement updated successfully!' : 'Announcement created successfully!'}
+          type="success"
+          onClose={() => setSuccess(false)}
+        />
       )}
+      
+      {error && (
+        <Toast
+          message={error}
+          type="error"
+          onClose={() => setError('')}
+        />
+      )}
+      
+      <form onSubmit={handleSubmit} className="w-full">
 
-      <div className="space-y-6">
+      <div className="space-y-3 md:space-y-4 lg:space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Title *
+          <label className="block text-xs md:text-sm font-medium text-[#1d2327] mb-1 md:mb-2">
+            Title <span className="text-red-600">*</span>
           </label>
           <input
             type="text"
             value={formData.title}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="w-full px-2 py-1.5 md:px-3 md:py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1] text-sm"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Content *
+          <label className="block text-xs md:text-sm font-medium text-[#1d2327] mb-1 md:mb-2">
+            Content <span className="text-red-600">*</span>
           </label>
           <textarea
             value={formData.content}
             onChange={(e) => setFormData({ ...formData, content: e.target.value })}
             rows={10}
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="w-full px-2 py-1.5 md:px-3 md:py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1] text-sm"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-xs md:text-sm font-medium text-[#1d2327] mb-1 md:mb-2">
             Status
           </label>
           <select
             value={formData.status}
             onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="w-full px-2 py-1.5 md:px-3 md:py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1] text-sm"
           >
             <option value="draft">Draft</option>
             <option value="published">Published</option>
           </select>
         </div>
 
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-2 md:gap-4 pt-3 md:pt-4">
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 bg-action-500 text-white py-3 rounded-lg hover:bg-action-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold shadow-lg"
+            className="flex-1 bg-[#2271b1] text-white px-3 py-2 md:px-4 md:py-2 rounded-sm hover:bg-[#135e96] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-normal text-xs md:text-sm"
           >
             {loading ? 'Saving...' : announcement?.id ? 'Update Announcement' : 'Create Announcement'}
           </button>
           <button
             type="button"
             onClick={() => router.push('/admin/announcements')}
-            className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-3 py-2 md:px-4 md:py-2 border border-[#c3c4c7] rounded-sm hover:bg-[#f6f7f7] transition-colors text-xs md:text-sm text-[#1d2327]"
           >
             Cancel
           </button>
         </div>
       </div>
     </form>
+    </>
   );
 }
 

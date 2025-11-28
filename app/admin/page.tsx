@@ -104,22 +104,22 @@ export default async function AdminPage() {
       <h1 className="text-2xl font-normal mb-6 text-[#1d2327]">Dashboard</h1>
       
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
             <Link
               key={stat.label}
               href={stat.href}
-              className="bg-white border border-[#c3c4c7] rounded-sm p-6 hover:shadow-md transition-shadow"
+              className="bg-white border border-[#c3c4c7] rounded-sm p-4 md:p-6 hover:shadow-md transition-shadow"
             >
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-[#646970] mb-1">{stat.label}</p>
-                  <p className="text-3xl font-semibold text-[#1d2327]">{stat.value}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs md:text-sm text-[#646970] mb-1">{stat.label}</p>
+                  <p className="text-2xl md:text-3xl font-semibold text-[#1d2327] truncate">{stat.value}</p>
                 </div>
-                <div className={`${stat.bgColor} ${stat.color} p-3 rounded-full`}>
-                  <Icon className="w-6 h-6" />
+                <div className={`${stat.bgColor} ${stat.color} p-2 md:p-3 rounded-full flex-shrink-0 ml-2`}>
+                  <Icon className="w-5 h-5 md:w-6 md:h-6" />
                 </div>
               </div>
             </Link>
@@ -128,43 +128,43 @@ export default async function AdminPage() {
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white border border-[#c3c4c7] rounded-sm p-6">
-        <h2 className="text-lg font-normal mb-4 text-[#1d2327]">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="bg-white border border-[#c3c4c7] rounded-sm p-4 md:p-6">
+        <h2 className="text-base md:text-lg font-normal mb-3 md:mb-4 text-[#1d2327]">Quick Actions</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
           <Link
             href="/admin/products/new"
-            className="border border-[#c3c4c7] rounded-sm p-4 hover:bg-[#f6f7f7] transition-colors"
+            className="border border-[#c3c4c7] rounded-sm p-3 md:p-4 hover:bg-[#f6f7f7] transition-colors"
           >
-            <h3 className="font-medium text-[#1d2327] mb-1">Add New Product</h3>
-            <p className="text-sm text-[#646970]">Create a new product for your shop</p>
+            <h3 className="font-medium text-sm md:text-base text-[#1d2327] mb-1">Add New Product</h3>
+            <p className="text-xs md:text-sm text-[#646970]">Create a new product for your shop</p>
           </Link>
           <Link
             href="/admin/courses/new"
-            className="border border-[#c3c4c7] rounded-sm p-4 hover:bg-[#f6f7f7] transition-colors"
+            className="border border-[#c3c4c7] rounded-sm p-3 md:p-4 hover:bg-[#f6f7f7] transition-colors"
           >
-            <h3 className="font-medium text-[#1d2327] mb-1">Add New Course</h3>
-            <p className="text-sm text-[#646970]">Create a new course with lessons</p>
+            <h3 className="font-medium text-sm md:text-base text-[#1d2327] mb-1">Add New Course</h3>
+            <p className="text-xs md:text-sm text-[#646970]">Create a new course with lessons</p>
           </Link>
           <Link
             href="/admin/users/new"
-            className="border border-[#c3c4c7] rounded-sm p-4 hover:bg-[#f6f7f7] transition-colors"
+            className="border border-[#c3c4c7] rounded-sm p-3 md:p-4 hover:bg-[#f6f7f7] transition-colors"
           >
-            <h3 className="font-medium text-[#1d2327] mb-1">Add New User</h3>
-            <p className="text-sm text-[#646970]">Create a new user account</p>
+            <h3 className="font-medium text-sm md:text-base text-[#1d2327] mb-1">Add New User</h3>
+            <p className="text-xs md:text-sm text-[#646970]">Create a new user account</p>
           </Link>
           <Link
             href="/admin/announcements/new"
-            className="border border-[#c3c4c7] rounded-sm p-4 hover:bg-[#f6f7f7] transition-colors"
+            className="border border-[#c3c4c7] rounded-sm p-3 md:p-4 hover:bg-[#f6f7f7] transition-colors"
           >
-            <h3 className="font-medium text-[#1d2327] mb-1">Create Announcement</h3>
-            <p className="text-sm text-[#646970]">Publish a new announcement</p>
+            <h3 className="font-medium text-sm md:text-base text-[#1d2327] mb-1">Create Announcement</h3>
+            <p className="text-xs md:text-sm text-[#646970]">Publish a new announcement</p>
           </Link>
           <Link
             href="/admin/webinars/new"
-            className="border border-[#c3c4c7] rounded-sm p-4 hover:bg-[#f6f7f7] transition-colors"
+            className="border border-[#c3c4c7] rounded-sm p-3 md:p-4 hover:bg-[#f6f7f7] transition-colors"
           >
-            <h3 className="font-medium text-[#1d2327] mb-1">Schedule Webinar</h3>
-            <p className="text-sm text-[#646970]">Schedule a new webinar</p>
+            <h3 className="font-medium text-sm md:text-base text-[#1d2327] mb-1">Schedule Webinar</h3>
+            <p className="text-xs md:text-sm text-[#646970]">Schedule a new webinar</p>
           </Link>
         </div>
       </div>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Trash2 } from 'lucide-react';
 
 interface DeleteUserButtonProps {
   userId: number;
@@ -11,7 +12,6 @@ interface DeleteUserButtonProps {
 export default function DeleteUserButton({ userId, userName }: DeleteUserButtonProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
 
   const handleDelete = async () => {
     if (!confirm(`Are you sure you want to delete user "${userName}"? This action cannot be undone.`)) {
@@ -42,10 +42,11 @@ export default function DeleteUserButton({ userId, userName }: DeleteUserButtonP
     <button
       onClick={handleDelete}
       disabled={loading}
-      className="text-red-600 hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      className="p-1.5 md:p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       title="Delete user"
+      aria-label="Delete user"
     >
-      {loading ? 'Deleting...' : 'Delete'}
+      <Trash2 className="w-4 h-4 md:w-5 md:h-5" />
     </button>
   );
 }

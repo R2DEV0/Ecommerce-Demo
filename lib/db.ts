@@ -204,6 +204,63 @@ export function initDatabase() {
     )
   `);
 
+  // Site settings table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS site_settings (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      setting_key TEXT UNIQUE NOT NULL,
+      setting_value TEXT,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Create media table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS media (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      filename TEXT NOT NULL,
+      original_filename TEXT NOT NULL,
+      file_path TEXT NOT NULL,
+      file_type TEXT NOT NULL,
+      mime_type TEXT NOT NULL,
+      file_size INTEGER NOT NULL,
+      width INTEGER,
+      height INTEGER,
+      alt_text TEXT,
+      description TEXT,
+      uploaded_by INTEGER,
+      uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (uploaded_by) REFERENCES users(id)
+    )
+  `);
+
+  // Initialize default site settings if not exists
+  const settingsExist = db.prepare('SELECT id FROM site_settings WHERE setting_key = ?').get('site_logo');
+  if (!settingsExist) {
+    const defaultSettings = [
+      ['site_logo', '/media/newlogo.jpg'],
+      ['site_favicon', '/favicon.ico'],
+      ['company_name', 'The Center for Depth and Complexity'],
+      ['company_description', 'Empowering learners to be independent thinkers and creative problem-solvers through the Depth and Complexity framework.'],
+      ['meta_title', 'Depth and Complexity Platform'],
+      ['meta_description', 'Professional development and learning platform'],
+      ['meta_keywords', 'depth and complexity, education, professional development, learning platform'],
+      ['site_email', ''],
+      ['site_phone', ''],
+      ['site_address', ''],
+      ['facebook_url', ''],
+      ['twitter_url', ''],
+      ['linkedin_url', ''],
+      ['youtube_url', ''],
+      ['copyright_text', ''],
+    ];
+    
+    const insertSetting = db.prepare('INSERT INTO site_settings (setting_key, setting_value) VALUES (?, ?)');
+    for (const [key, value] of defaultSettings) {
+      insertSetting.run(key, value);
+    }
+  }
+
   // Create default admin user if not exists
   const adminExists = db.prepare('SELECT id FROM users WHERE email = ?').get('admin@example.com');
   if (!adminExists) {

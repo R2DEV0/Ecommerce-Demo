@@ -11,9 +11,9 @@ export default async function NewCoursePage() {
   }
 
   return (
-    <div>
-      <h1 className="text-2xl font-normal mb-6 text-[#1d2327]">Add New Course</h1>
-      <div className="bg-white border border-[#c3c4c7] rounded-sm p-6">
+    <div className="w-full max-w-full">
+      <h1 className="text-xl md:text-2xl font-normal mb-3 md:mb-6 text-[#1d2327]">Add New Course</h1>
+      <div className="bg-white border border-[#c3c4c7] rounded-sm p-3 sm:p-4 md:p-6 w-full max-w-full">
         <CourseForm />
       </div>
     </div>

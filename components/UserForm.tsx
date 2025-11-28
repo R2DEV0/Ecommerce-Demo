@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Toast from './Toast';
 
 interface User {
   id?: number;
@@ -20,6 +21,7 @@ export default function UserForm({ user }: UserFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
   const [formData, setFormData] = useState<User>({
     name: user?.name || '',
     email: user?.email || '',
@@ -82,8 +84,11 @@ export default function UserForm({ user }: UserFormProps) {
         return;
       }
 
-      router.push('/admin/users');
-      router.refresh();
+      setSuccess(true);
+      setTimeout(() => {
+        router.push('/admin/users');
+        router.refresh();
+      }, 1000);
     } catch (err) {
       setError('An error occurred. Please try again.');
       setLoading(false);
@@ -91,16 +96,28 @@ export default function UserForm({ user }: UserFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-sm mb-4 text-sm">
-          {error}
-        </div>
+    <>
+      {success && (
+        <Toast
+          message={user?.id ? 'User updated successfully!' : 'User created successfully!'}
+          type="success"
+          onClose={() => setSuccess(false)}
+        />
       )}
+      
+      {error && (
+        <Toast
+          message={error}
+          type="error"
+          onClose={() => setError('')}
+        />
+      )}
+      
+      <form onSubmit={handleSubmit} className="w-full">
 
-      <div className="space-y-6">
+      <div className="space-y-3 md:space-y-4 lg:space-y-6">
         <div>
-          <label className="block text-sm font-medium text-[#1d2327] mb-2">
+          <label className="block text-xs md:text-sm font-medium text-[#1d2327] mb-1 md:mb-2">
             Name <span className="text-red-600">*</span>
           </label>
           <input
@@ -108,12 +125,12 @@ export default function UserForm({ user }: UserFormProps) {
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             required
-            className="w-full px-3 py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1]"
+            className="w-full px-2 py-1.5 md:px-3 md:py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1] text-sm"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-[#1d2327] mb-2">
+          <label className="block text-xs md:text-sm font-medium text-[#1d2327] mb-1 md:mb-2">
             Email <span className="text-red-600">*</span>
           </label>
           <input
@@ -121,14 +138,14 @@ export default function UserForm({ user }: UserFormProps) {
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             required
-            className="w-full px-3 py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1]"
+            className="w-full px-2 py-1.5 md:px-3 md:py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1] text-sm"
           />
         </div>
 
         {!user?.id ? (
           <>
             <div>
-              <label className="block text-sm font-medium text-[#1d2327] mb-2">
+              <label className="block text-xs md:text-sm font-medium text-[#1d2327] mb-1 md:mb-2">
                 Password <span className="text-red-600">*</span>
               </label>
               <input
@@ -136,12 +153,12 @@ export default function UserForm({ user }: UserFormProps) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required={!user?.id}
-                className="w-full px-3 py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1]"
+                className="w-full px-2 py-1.5 md:px-3 md:py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1] text-sm"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#1d2327] mb-2">
+              <label className="block text-xs md:text-sm font-medium text-[#1d2327] mb-1 md:mb-2">
                 Confirm Password <span className="text-red-600">*</span>
               </label>
               <input
@@ -149,16 +166,16 @@ export default function UserForm({ user }: UserFormProps) {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required={!user?.id}
-                className="w-full px-3 py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1]"
+                className="w-full px-2 py-1.5 md:px-3 md:py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1] text-sm"
               />
             </div>
           </>
         ) : (
-          <div className="border-t border-[#c3c4c7] pt-6">
-            <h3 className="text-base font-semibold text-[#1d2327] mb-2">Reset Password</h3>
-            <p className="text-sm text-[#646970] mb-4">Leave blank to keep current password, or enter a new password to reset it.</p>
+          <div className="border-t border-[#c3c4c7] pt-3 md:pt-6">
+            <h3 className="text-sm md:text-base font-semibold text-[#1d2327] mb-1 md:mb-2">Reset Password</h3>
+            <p className="text-xs md:text-sm text-[#646970] mb-3 md:mb-4">Leave blank to keep current password, or enter a new password to reset it.</p>
             <div>
-              <label className="block text-sm font-medium text-[#1d2327] mb-2">
+              <label className="block text-xs md:text-sm font-medium text-[#1d2327] mb-1 md:mb-2">
                 New Password
               </label>
               <input
@@ -166,13 +183,13 @@ export default function UserForm({ user }: UserFormProps) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 minLength={6}
-                className="w-full px-3 py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1]"
+                className="w-full px-2 py-1.5 md:px-3 md:py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1] text-sm"
                 placeholder="Enter new password (min 6 characters)"
               />
             </div>
             {password && (
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-[#1d2327] mb-2">
+              <div className="mt-3 md:mt-4">
+                <label className="block text-xs md:text-sm font-medium text-[#1d2327] mb-1 md:mb-2">
                   Confirm New Password
                 </label>
                 <input
@@ -180,7 +197,7 @@ export default function UserForm({ user }: UserFormProps) {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   minLength={6}
-                  className="w-full px-3 py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1]"
+                  className="w-full px-2 py-1.5 md:px-3 md:py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1] text-sm"
                   placeholder="Confirm new password"
                 />
               </div>
@@ -189,14 +206,14 @@ export default function UserForm({ user }: UserFormProps) {
         )}
 
         <div>
-          <label className="block text-sm font-medium text-[#1d2327] mb-2">
+          <label className="block text-xs md:text-sm font-medium text-[#1d2327] mb-1 md:mb-2">
             Role <span className="text-red-600">*</span>
           </label>
           <select
             value={formData.role}
             onChange={(e) => setFormData({ ...formData, role: e.target.value })}
             required
-            className="w-full px-3 py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1]"
+            className="w-full px-2 py-1.5 md:px-3 md:py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1] text-sm"
           >
             <option value="subscriber">Subscriber</option>
             <option value="manager">Manager</option>
@@ -210,31 +227,32 @@ export default function UserForm({ user }: UserFormProps) {
             id="can_add_users"
             checked={formData.can_add_users === 1}
             onChange={(e) => setFormData({ ...formData, can_add_users: e.target.checked ? 1 : 0 })}
-            className="h-4 w-4 text-[#2271b1] focus:ring-[#2271b1] border-[#8c8f94] rounded"
+            className="h-4 w-4 text-[#2271b1] focus:ring-[#2271b1] border-[#8c8f94] rounded flex-shrink-0"
           />
-          <label htmlFor="can_add_users" className="ml-2 block text-sm text-[#1d2327]">
+          <label htmlFor="can_add_users" className="ml-2 block text-xs md:text-sm text-[#1d2327]">
             Can Add Users (allows this user to add users under them)
           </label>
         </div>
 
-        <div className="flex gap-2 pt-4">
+        <div className="flex flex-col sm:flex-row gap-2 pt-4">
           <button
             type="submit"
             disabled={loading}
-            className="bg-[#2271b1] text-white px-4 py-2 rounded-sm hover:bg-[#135e96] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-normal text-sm"
+            className="bg-[#2271b1] text-white px-3 py-2 md:px-4 rounded-sm hover:bg-[#135e96] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-normal text-xs md:text-sm"
           >
             {loading ? 'Saving...' : user?.id ? 'Update User' : 'Create User'}
           </button>
           <button
             type="button"
             onClick={() => router.push('/admin/users')}
-            className="px-4 py-2 border border-[#c3c4c7] rounded-sm hover:bg-[#f6f7f7] transition-colors text-sm text-[#1d2327]"
+            className="px-3 py-2 md:px-4 border border-[#c3c4c7] rounded-sm hover:bg-[#f6f7f7] transition-colors text-xs md:text-sm text-[#1d2327]"
           >
             Cancel
           </button>
         </div>
       </div>
     </form>
+    </>
   );
 }
 

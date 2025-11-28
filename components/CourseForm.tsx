@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Toast from './Toast';
 
 interface Lesson {
   id?: number;
@@ -30,6 +31,7 @@ export default function CourseForm({ course, lessons: initialLessons = [] }: Cou
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
   const [formData, setFormData] = useState<Course>({
     title: course?.title || '',
     description: course?.description || '',
@@ -95,8 +97,11 @@ export default function CourseForm({ course, lessons: initialLessons = [] }: Cou
         return;
       }
 
-      router.push('/admin/courses');
-      router.refresh();
+      setSuccess(true);
+      setTimeout(() => {
+        router.push('/admin/courses');
+        router.refresh();
+      }, 1000);
     } catch (err) {
       setError('An error occurred. Please try again.');
       setLoading(false);
@@ -104,43 +109,55 @@ export default function CourseForm({ course, lessons: initialLessons = [] }: Cou
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-lg p-8 max-w-4xl">
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
-        </div>
+    <>
+      {success && (
+        <Toast
+          message={course?.id ? 'Course updated successfully!' : 'Course created successfully!'}
+          type="success"
+          onClose={() => setSuccess(false)}
+        />
       )}
+      
+      {error && (
+        <Toast
+          message={error}
+          type="error"
+          onClose={() => setError('')}
+        />
+      )}
+      
+      <form onSubmit={handleSubmit} className="w-full">
 
-      <div className="space-y-6">
+      <div className="space-y-3 md:space-y-4 lg:space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Course Title *
+          <label className="block text-xs md:text-sm font-medium text-[#1d2327] mb-1 md:mb-2">
+            Course Title <span className="text-red-600">*</span>
           </label>
           <input
             type="text"
             value={formData.title}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="w-full px-2 py-1.5 md:px-3 md:py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1] text-sm"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-xs md:text-sm font-medium text-[#1d2327] mb-1 md:mb-2">
             Description
           </label>
           <textarea
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             rows={4}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="w-full px-2 py-1.5 md:px-3 md:py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1] text-sm"
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Price *
+            <label className="block text-xs md:text-sm font-medium text-[#1d2327] mb-1 md:mb-2">
+              Price <span className="text-red-600">*</span>
             </label>
             <input
               type="number"
@@ -149,18 +166,18 @@ export default function CourseForm({ course, lessons: initialLessons = [] }: Cou
               value={formData.price}
               onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-2 py-1.5 md:px-3 md:py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1] text-sm"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-xs md:text-sm font-medium text-[#1d2327] mb-1 md:mb-2">
               Status
             </label>
             <select
               value={formData.status}
               onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-2 py-1.5 md:px-3 md:py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1] text-sm"
             >
               <option value="draft">Draft</option>
               <option value="published">Published</option>
@@ -169,75 +186,75 @@ export default function CourseForm({ course, lessons: initialLessons = [] }: Cou
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-xs md:text-sm font-medium text-[#1d2327] mb-1 md:mb-2">
             Image URL
           </label>
           <input
             type="url"
             value={formData.image_url}
             onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="w-full px-2 py-1.5 md:px-3 md:py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1] text-sm"
           />
         </div>
 
         {/* Lessons */}
         <div>
-          <div className="flex justify-between items-center mb-4">
-            <label className="block text-sm font-medium text-gray-700">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-3 md:mb-4">
+            <label className="block text-xs md:text-sm font-medium text-[#1d2327]">
               Lessons
             </label>
             <button
               type="button"
               onClick={addLesson}
-              className="text-primary-600 hover:text-primary-700 text-sm font-medium"
+              className="text-[#2271b1] hover:text-[#135e96] text-xs md:text-sm font-medium whitespace-nowrap"
             >
               + Add Lesson
             </button>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3 md:space-y-4">
             {lessons.map((lesson, index) => (
-              <div key={index} className="border border-gray-200 rounded-lg p-4">
-                <div className="flex justify-between items-start mb-4">
-                  <h4 className="font-medium text-gray-900">Lesson {index + 1}</h4>
+              <div key={index} className="border border-[#c3c4c7] rounded-sm p-3 md:p-4">
+                <div className="flex justify-between items-start mb-3 md:mb-4">
+                  <h4 className="text-sm md:text-base font-medium text-[#1d2327]">Lesson {index + 1}</h4>
                   <button
                     type="button"
                     onClick={() => removeLesson(index)}
-                    className="text-red-600 hover:text-red-700 text-sm"
+                    className="text-red-600 hover:text-red-700 text-xs md:text-sm"
                   >
                     Remove
                   </button>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-2 md:space-y-3">
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Lesson Title *
+                    <label className="block text-xs font-medium text-[#1d2327] mb-1">
+                      Lesson Title <span className="text-red-600">*</span>
                     </label>
                     <input
                       type="text"
                       value={lesson.title}
                       onChange={(e) => updateLesson(index, 'title', e.target.value)}
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                      className="w-full px-2 py-1.5 md:px-3 md:py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1] text-sm"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                    <label className="block text-xs font-medium text-[#1d2327] mb-1">
                       Content
                     </label>
                     <textarea
                       value={lesson.content}
                       onChange={(e) => updateLesson(index, 'content', e.target.value)}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                      className="w-full px-2 py-1.5 md:px-3 md:py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1] text-sm"
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3">
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                      <label className="block text-xs font-medium text-[#1d2327] mb-1">
                         Duration (seconds)
                       </label>
                       <input
@@ -245,19 +262,19 @@ export default function CourseForm({ course, lessons: initialLessons = [] }: Cou
                         min="0"
                         value={lesson.duration}
                         onChange={(e) => updateLesson(index, 'duration', parseInt(e.target.value) || 0)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                        className="w-full px-2 py-1.5 md:px-3 md:py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1] text-sm"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                      <label className="block text-xs font-medium text-[#1d2327] mb-1">
                         Video URL
                       </label>
                       <input
                         type="url"
                         value={lesson.video_url}
                         onChange={(e) => updateLesson(index, 'video_url', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                        className="w-full px-2 py-1.5 md:px-3 md:py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1] text-sm"
                       />
                     </div>
                   </div>
@@ -267,24 +284,25 @@ export default function CourseForm({ course, lessons: initialLessons = [] }: Cou
           </div>
         </div>
 
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-2 md:gap-4 pt-3 md:pt-4">
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 bg-action-500 text-white py-3 rounded-lg hover:bg-action-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold shadow-lg"
+            className="flex-1 bg-[#2271b1] text-white px-3 py-2 md:px-4 md:py-2 rounded-sm hover:bg-[#135e96] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-normal text-xs md:text-sm"
           >
             {loading ? 'Saving...' : course?.id ? 'Update Course' : 'Create Course'}
           </button>
           <button
             type="button"
             onClick={() => router.push('/admin/courses')}
-            className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-3 py-2 md:px-4 md:py-2 border border-[#c3c4c7] rounded-sm hover:bg-[#f6f7f7] transition-colors text-xs md:text-sm text-[#1d2327]"
           >
             Cancel
           </button>
         </div>
       </div>
     </form>
+    </>
   );
 }
 
