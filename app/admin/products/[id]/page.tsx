@@ -24,11 +24,19 @@ export default async function EditProductPage({ params }: { params: { id: string
     ORDER BY variation_type, name
   `).all(product.id) as any[];
 
+  const tags = db.prepare(`
+    SELECT t.id, t.name
+    FROM tags t
+    INNER JOIN product_tags pt ON t.id = pt.tag_id
+    WHERE pt.product_id = ?
+    ORDER BY t.name ASC
+  `).all(product.id) as Array<{ id: number; name: string }>;
+
   return (
     <div className="w-full max-w-full">
       <h1 className="text-xl md:text-2xl font-normal mb-3 md:mb-6 text-[#1d2327]">Edit Product</h1>
       <div className="bg-white border border-[#c3c4c7] rounded-sm p-3 sm:p-4 md:p-6 w-full max-w-full">
-        <ProductForm product={product} versions={versions} />
+        <ProductForm product={product} versions={versions} tags={tags} />
       </div>
     </div>
   );

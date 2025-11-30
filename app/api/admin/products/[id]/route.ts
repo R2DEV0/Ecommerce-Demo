@@ -8,7 +8,7 @@ export async function PUT(
 ) {
   try {
     await requireAdmin();
-    const { product, versions } = await request.json();
+    const { product, versions, tags } = await request.json();
     const productId = parseInt(params.id);
 
     if (!product.name || product.price === undefined) {
@@ -55,6 +55,28 @@ export async function PUT(
             version.stock || null,
             version.sku || null
           );
+        }
+      }
+    }
+
+    // Handle tags - delete existing and add new
+    db.prepare('DELETE FROM product_tags WHERE product_id = ?').run(productId);
+    
+    if (tags && Array.isArray(tags)) {
+      const insertTag = db.prepare(`
+        INSERT OR IGNORE INTO tags (name, slug)
+        VALUES (?, LOWER(REPLACE(?, ' ', '-')))
+      `);
+      const insertProductTag = db.prepare(`
+        INSERT OR IGNORE INTO product_tags (product_id, tag_id)
+        VALUES (?, (SELECT id FROM tags WHERE name = ?))
+      `);
+
+      for (const tagName of tags) {
+        if (tagName && typeof tagName === 'string' && tagName.trim()) {
+          const trimmed = tagName.trim().toLowerCase();
+          insertTag.run(trimmed, trimmed);
+          insertProductTag.run(productId, trimmed);
         }
       }
     }

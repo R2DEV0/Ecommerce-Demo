@@ -43,10 +43,18 @@ export function initDatabase() {
       image_url TEXT,
       category TEXT,
       status TEXT DEFAULT 'active',
+      featured INTEGER DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  // Add featured column if it doesn't exist (for existing databases)
+  try {
+    db.exec(`ALTER TABLE products ADD COLUMN featured INTEGER DEFAULT 0`);
+  } catch (e: any) {
+    // Column already exists, ignore
+  }
 
   // Product versions table
   db.exec(`
@@ -54,6 +62,8 @@ export function initDatabase() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       product_id INTEGER NOT NULL,
       name TEXT NOT NULL,
+      variation_type TEXT DEFAULT 'general',
+      attribute_value TEXT,
       price_modifier DECIMAL(10, 2) DEFAULT 0,
       stock INTEGER,
       sku TEXT,
@@ -61,6 +71,18 @@ export function initDatabase() {
       FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
     )
   `);
+
+  // Add variation_type and attribute_value columns if they don't exist (for existing databases)
+  try {
+    db.exec(`ALTER TABLE product_versions ADD COLUMN variation_type TEXT DEFAULT 'general'`);
+  } catch (e: any) {
+    // Column already exists, ignore
+  }
+  try {
+    db.exec(`ALTER TABLE product_versions ADD COLUMN attribute_value TEXT`);
+  } catch (e: any) {
+    // Column already exists, ignore
+  }
 
   // Courses table
   db.exec(`
@@ -231,6 +253,29 @@ export function initDatabase() {
       uploaded_by INTEGER,
       uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (uploaded_by) REFERENCES users(id)
+    )
+  `);
+
+  // Tags table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS tags (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT UNIQUE NOT NULL,
+      slug TEXT UNIQUE NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Product tags junction table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS product_tags (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      product_id INTEGER NOT NULL,
+      tag_id INTEGER NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+      FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE,
+      UNIQUE(product_id, tag_id)
     )
   `);
 

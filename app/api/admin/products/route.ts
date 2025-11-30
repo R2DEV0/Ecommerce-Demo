@@ -5,7 +5,7 @@ import db from '@/lib/db';
 export async function POST(request: NextRequest) {
   try {
     await requireAdmin();
-    const { product, versions } = await request.json();
+    const { product, versions, tags } = await request.json();
 
     if (!product.name || product.price === undefined) {
       return NextResponse.json(
@@ -48,6 +48,26 @@ export async function POST(request: NextRequest) {
             version.stock || null,
             version.sku || null
           );
+        }
+      }
+    }
+
+    // Handle tags
+    if (tags && Array.isArray(tags)) {
+      const insertTag = db.prepare(`
+        INSERT OR IGNORE INTO tags (name, slug)
+        VALUES (?, LOWER(REPLACE(?, ' ', '-')))
+      `);
+      const insertProductTag = db.prepare(`
+        INSERT OR IGNORE INTO product_tags (product_id, tag_id)
+        VALUES (?, (SELECT id FROM tags WHERE name = ?))
+      `);
+
+      for (const tagName of tags) {
+        if (tagName && typeof tagName === 'string' && tagName.trim()) {
+          const trimmed = tagName.trim().toLowerCase();
+          insertTag.run(trimmed, trimmed);
+          insertProductTag.run(productId, trimmed);
         }
       }
     }

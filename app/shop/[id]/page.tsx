@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import { notFound } from 'next/navigation';
 import { useCart } from '@/contexts/CartContext';
+import Link from 'next/link';
 
 interface ProductVersion {
   id: number;
@@ -25,6 +26,15 @@ interface Product {
   category: string | null;
 }
 
+interface SimilarProduct {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  image_url: string | null;
+  version_count: number;
+}
+
 export default function ProductPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const { addItem, toggleCart, isOpen } = useCart();
@@ -33,6 +43,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
   const [selectedVariations, setSelectedVariations] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [similarProducts, setSimilarProducts] = useState<SimilarProduct[]>([]);
 
   useEffect(() => {
     fetch(`/api/products/${params.id}`)
@@ -49,6 +60,18 @@ export default function ProductPage({ params }: { params: { id: string } }) {
       .catch(() => {
         setError('Failed to load product');
         setLoading(false);
+      });
+
+    // Fetch similar products
+    fetch(`/api/products/${params.id}/similar`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.products) {
+          setSimilarProducts(data.products);
+        }
+      })
+      .catch(() => {
+        // Silently fail for similar products
       });
   }, [params.id]);
 
@@ -276,6 +299,48 @@ export default function ProductPage({ params }: { params: { id: string } }) {
               </div>
             </div>
           </div>
+
+          {/* Similar Products Section */}
+          {similarProducts.length > 0 && (
+            <div className="mt-8 md:mt-12">
+              <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-gray-900">You May Also Like</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                {similarProducts.map((similarProduct) => (
+                  <Link
+                    key={similarProduct.id}
+                    href={`/shop/${similarProduct.id}`}
+                    className="bg-white rounded-lg shadow hover:shadow-lg transition-all transform hover:-translate-y-1 overflow-hidden group"
+                  >
+                    {similarProduct.image_url && (
+                      <div className="aspect-video bg-gray-200 overflow-hidden">
+                        <img
+                          src={similarProduct.image_url}
+                          alt={similarProduct.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      </div>
+                    )}
+                    <div className="p-3 md:p-4">
+                      <h3 className="font-semibold text-base md:text-lg mb-2 text-gray-900 group-hover:text-primary-600 transition-colors">
+                        {similarProduct.name}
+                      </h3>
+                      <p className="text-gray-600 text-xs md:text-sm mb-3 line-clamp-2">{similarProduct.description}</p>
+                      <div className="flex justify-between items-center">
+                        <span className="text-lg md:text-xl font-bold text-primary-600">
+                          ${parseFloat(similarProduct.price.toString()).toFixed(2)}
+                        </span>
+                        {similarProduct.version_count > 0 && (
+                          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                            {similarProduct.version_count} option{similarProduct.version_count > 1 ? 's' : ''}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </>

@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Toast from './Toast';
+import { X } from 'lucide-react';
 
 interface ProductVersion {
   id?: number;
@@ -28,9 +29,10 @@ interface Product {
 interface ProductFormProps {
   product?: Product;
   versions?: ProductVersion[];
+  tags?: Array<{ id: number; name: string }>;
 }
 
-export default function ProductForm({ product, versions: initialVersions = [] }: ProductFormProps) {
+export default function ProductForm({ product, versions: initialVersions = [], tags: initialTags = [] }: ProductFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -53,6 +55,35 @@ export default function ProductForm({ product, versions: initialVersions = [] }:
         }))
       : []
   );
+  const [tags, setTags] = useState<Array<{ id: number; name: string }>>(initialTags);
+  const [tagInput, setTagInput] = useState('');
+  const [availableTags, setAvailableTags] = useState<Array<{ id: number; name: string }>>([]);
+
+  // Fetch available tags on mount
+  useEffect(() => {
+    fetch('/api/tags')
+      .then(res => res.json())
+      .then(data => {
+        if (data.tags) {
+          setAvailableTags(data.tags);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Fetch product tags if editing
+  useEffect(() => {
+    if (product?.id) {
+      fetch(`/api/products/${product.id}/tags`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.tags) {
+            setTags(data.tags);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [product?.id]);
 
   const addVersion = () => {
     setVersions([...versions, {
@@ -75,6 +106,38 @@ export default function ProductForm({ product, versions: initialVersions = [] }:
     setVersions(updated);
   };
 
+  const addTag = (tagName: string) => {
+    const trimmed = tagName.trim().toLowerCase();
+    if (!trimmed) return;
+    
+    // Check if tag already exists in selected tags
+    if (tags.some(t => t.name.toLowerCase() === trimmed)) {
+      setTagInput('');
+      return;
+    }
+
+    // Check if tag exists in available tags
+    const existingTag = availableTags.find(t => t.name.toLowerCase() === trimmed);
+    if (existingTag) {
+      setTags([...tags, existingTag]);
+    } else {
+      // Create new tag (will be created on server)
+      setTags([...tags, { id: 0, name: trimmed }]);
+    }
+    setTagInput('');
+  };
+
+  const removeTag = (tagId: number) => {
+    setTags(tags.filter(t => t.id !== tagId));
+  };
+
+  const handleTagInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addTag(tagInput);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -93,6 +156,7 @@ export default function ProductForm({ product, versions: initialVersions = [] }:
         body: JSON.stringify({
           product: formData,
           versions: versions.filter(v => v.name.trim() !== ''),
+          tags: tags.map(t => t.name),
         }),
       });
 
@@ -227,6 +291,72 @@ export default function ProductForm({ product, versions: initialVersions = [] }:
             onChange={(e) => setFormData({ ...formData, category: e.target.value })}
             className="w-full px-2 py-1.5 md:px-3 md:py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1] text-sm"
           />
+        </div>
+
+        {/* Tags Section */}
+        <div>
+          <label className="block text-xs md:text-sm font-medium text-[#1d2327] mb-1 md:mb-2">
+            Tags (for filtering and related products)
+          </label>
+          <div className="flex flex-wrap gap-2 mb-2 p-2 md:p-3 min-h-[60px] border border-[#8c8f94] rounded-sm bg-white">
+            {tags.length === 0 ? (
+              <span className="text-xs text-gray-400">No tags added yet</span>
+            ) : (
+              tags.map((tag) => (
+                <span
+                  key={tag.id || tag.name}
+                  className="inline-flex items-center gap-1 px-2 py-1 bg-[#2271b1] text-white text-xs rounded-sm"
+                >
+                  {tag.name}
+                  <button
+                    type="button"
+                    onClick={() => removeTag(tag.id)}
+                    className="hover:bg-[#135e96] rounded-full p-0.5 transition-colors"
+                    aria-label={`Remove ${tag.name} tag`}
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))
+            )}
+          </div>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              onKeyDown={handleTagInputKeyDown}
+              placeholder="Type tag name and press Enter"
+              className="flex-1 px-2 py-1.5 md:px-3 md:py-2 border border-[#8c8f94] rounded-sm focus:ring-2 focus:ring-[#2271b1] focus:border-[#2271b1] text-sm"
+            />
+            <button
+              type="button"
+              onClick={() => addTag(tagInput)}
+              className="px-3 py-1.5 md:py-2 bg-[#2271b1] text-white rounded-sm hover:bg-[#135e96] transition-colors text-xs md:text-sm whitespace-nowrap"
+            >
+              Add Tag
+            </button>
+          </div>
+          {availableTags.length > 0 && (
+            <div className="mt-2">
+              <p className="text-xs text-gray-600 mb-1">Suggested tags:</p>
+              <div className="flex flex-wrap gap-1">
+                {availableTags
+                  .filter(t => !tags.some(selected => selected.id === t.id))
+                  .slice(0, 10)
+                  .map((tag) => (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      onClick={() => addTag(tag.name)}
+                      className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-sm transition-colors"
+                    >
+                      {tag.name}
+                    </button>
+                  ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Product Variations */}
