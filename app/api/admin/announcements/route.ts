@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
       args: [title, content, user.id, status || 'published']
     });
 
-    return NextResponse.json({ success: true, announcementId: result.lastInsertRowid });
+    return NextResponse.json({ success: true, announcementId: Number(result.lastInsertRowid) });
   } catch (error: any) {
     if (error.message === 'Unauthorized' || error.message === 'Forbidden') {
       return NextResponse.json(

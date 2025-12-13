@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({
-      id: result.lastInsertRowid,
+      id: Number(result.lastInsertRowid),
       filename,
       original_filename: originalFilename,
       file_path: `/media/${filename}`,

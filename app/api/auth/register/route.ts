@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
 
     const newUserResult = await db.execute({
       sql: 'SELECT * FROM users WHERE id = ?',
-      args: [result.lastInsertRowid]
+      args: [Number(result.lastInsertRowid)]
     });
     const newUser = newUserResult.rows[0] as any;
 

@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       ]
     });
 
-    return NextResponse.json({ success: true, userId: result.lastInsertRowid });
+    return NextResponse.json({ success: true, userId: Number(result.lastInsertRowid) });
   } catch (error: any) {
     if (error.message === 'Unauthorized' || error.message === 'Forbidden') {
       return NextResponse.json(
