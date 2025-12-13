@@ -125,7 +125,7 @@ export async function seedDatabase() {
         productId,
         variation.name,
         variation.variation_type,
-        variation.attribute_value || null,
+        (variation as { attribute_value?: string }).attribute_value || null,
         variation.price_modifier,
         variation.stock,
         null
