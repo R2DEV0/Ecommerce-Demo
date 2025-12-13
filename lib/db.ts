@@ -2,8 +2,8 @@ import { createClient, Client } from '@libsql/client';
 
 // Create Turso client
 const db: Client = createClient({
-  url: process.env.TURSO_DATABASE_URL || 'file:local.db',
-  authToken: process.env.TURSO_AUTH_TOKEN,
+  url: process.env.TURSO_DATABASE_URL || process.env.TURSO_URL || 'file:local.db',
+  authToken: process.env.TURSO_AUTH_TOKEN || process.env.TURSO_TOKEN,
 });
 
 // Initialize database schema
