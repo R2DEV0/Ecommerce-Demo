@@ -391,7 +391,7 @@ export default function ProductForm({ product, versions: initialVersions = [], t
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 mb-3 md:mb-4">
                   <div>
                     <label className="block text-xs font-medium text-[#1d2327] mb-1">
-                      Name (e.g., "2-Pack", "Red", "Large")
+                      Name (e.g., &quot;2-Pack&quot;, &quot;Red&quot;, &quot;Large&quot;)
                     </label>
                     <input
                       type="text"

@@ -97,7 +97,7 @@ export default function Home() {
             <div className="container mx-auto px-4">
               <div className="text-center mb-8 md:mb-12">
                 <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 md:mb-4">
-                  Don't Miss Our Best-Selling Products
+                  Don&apos;t Miss Our Best-Selling Products
                 </h2>
                 <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto px-4">
                   Essential tools and resources for implementing Depth and Complexity in your classroom
