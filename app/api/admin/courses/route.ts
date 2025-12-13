@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
       ]
     });
 
-    const courseId = result.lastInsertRowid;
+    const courseId = Number(result.lastInsertRowid);
 
     // Insert lessons
     if (lessons && Array.isArray(lessons)) {

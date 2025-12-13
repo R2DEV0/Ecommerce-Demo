@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       ]
     });
 
-    const productId = result.lastInsertRowid;
+    const productId = Number(result.lastInsertRowid);
 
     // Insert versions
     if (versions && Array.isArray(versions)) {

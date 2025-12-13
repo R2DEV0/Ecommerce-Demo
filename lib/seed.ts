@@ -117,7 +117,7 @@ export async function seedDatabase() {
         product.featured
       ]
     });
-    const productId = result.lastInsertRowid;
+    const productId = Number(result.lastInsertRowid);
 
     for (const variation of product.variations || []) {
       await db.execute({
@@ -201,7 +201,7 @@ export async function seedDatabase() {
             VALUES (?, ?, ?, ?, ?)`,
       args: [course.title, course.description, course.price, course.image_url, course.status]
     });
-    const courseId = result.lastInsertRowid;
+    const courseId = Number(result.lastInsertRowid);
 
     for (const lesson of course.lessons) {
       await db.execute({
