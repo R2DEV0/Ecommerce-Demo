@@ -13,13 +13,12 @@ export async function seedDatabase() {
 
   // Create additional admin user
   const adminEmail = 'admin@depthcomplexity.com';
-  const adminExists = db.prepare('SELECT id FROM users WHERE email = ?').get(adminEmail);
-  if (!adminExists) {
-    const hashedPassword = await bcrypt.hash('admin123', 10);
-    db.prepare(`
-      INSERT INTO users (email, password, name, role, can_add_users)
-      VALUES (?, ?, ?, ?, ?)
-    `).run(adminEmail, hashedPassword, 'Admin User', 'admin', 1);
+  const hashedPassword = await bcrypt.hash('admin123', 10);
+  const result = db.prepare(`
+    INSERT OR IGNORE INTO users (email, password, name, role, can_add_users)
+    VALUES (?, ?, ?, ?, ?)
+  `).run(adminEmail, hashedPassword, 'Admin User', 'admin', 1);
+  if (result.changes > 0) {
     console.log('Created admin user:', adminEmail);
   }
 

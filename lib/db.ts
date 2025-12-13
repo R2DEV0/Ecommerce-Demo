@@ -307,15 +307,12 @@ export function initDatabase() {
   }
 
   // Create default admin user if not exists
-  const adminExists = db.prepare('SELECT id FROM users WHERE email = ?').get('admin@example.com');
-  if (!adminExists) {
-    const bcrypt = require('bcryptjs');
-    const hashedPassword = bcrypt.hashSync('admin123', 10);
-    db.prepare(`
-      INSERT INTO users (email, password, name, role, can_add_users)
-      VALUES (?, ?, ?, ?, ?)
-    `).run('admin@example.com', hashedPassword, 'Admin User', 'admin', 1);
-  }
+  const bcrypt = require('bcryptjs');
+  const hashedPassword = bcrypt.hashSync('admin123', 10);
+  db.prepare(`
+    INSERT OR IGNORE INTO users (email, password, name, role, can_add_users)
+    VALUES (?, ?, ?, ?, ?)
+  `).run('admin@example.com', hashedPassword, 'Admin User', 'admin', 1);
 }
 
 // Initialize database on import
