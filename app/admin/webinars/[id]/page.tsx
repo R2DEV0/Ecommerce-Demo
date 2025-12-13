@@ -4,6 +4,8 @@ import db, { initDatabase } from '@/lib/db';
 import { notFound } from 'next/navigation';
 import WebinarForm from '@/components/WebinarForm';
 
+export const dynamic = 'force-dynamic';
+
 export default async function EditWebinarPage({ params }: { params: Promise<{ id: string }> }) {
   try {
     await requireAdmin();

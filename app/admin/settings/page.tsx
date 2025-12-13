@@ -3,6 +3,8 @@ import { requireAdmin } from '@/lib/auth';
 import SiteSettingsForm from '@/components/SiteSettingsForm';
 import db, { initDatabase } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 export default async function SiteSettingsPage() {
   try {
     await requireAdmin();

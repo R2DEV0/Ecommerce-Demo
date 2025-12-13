@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { Pencil } from 'lucide-react';
 import DeleteUserButton from '@/components/DeleteUserButton';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminUsersPage() {
   try {
     await requireAdmin();

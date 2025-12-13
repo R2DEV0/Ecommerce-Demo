@@ -4,6 +4,8 @@ import { getCurrentUser } from '@/lib/auth';
 import { notFound, redirect } from 'next/navigation';
 import PasswordChangeForm from '@/components/PasswordChangeForm';
 import Link from 'next/link';
+
+export const dynamic = 'force-dynamic';
 import { 
   User, 
   Mail, 

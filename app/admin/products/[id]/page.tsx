@@ -4,6 +4,8 @@ import db, { initDatabase } from '@/lib/db';
 import { notFound } from 'next/navigation';
 import ProductForm from '@/components/ProductForm';
 
+export const dynamic = 'force-dynamic';
+
 export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
   try {
     await requireAdmin();

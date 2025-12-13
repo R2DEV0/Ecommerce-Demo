@@ -4,6 +4,8 @@ import db, { initDatabase } from '@/lib/db';
 import { notFound } from 'next/navigation';
 import CourseForm from '@/components/CourseForm';
 
+export const dynamic = 'force-dynamic';
+
 export default async function EditCoursePage({ params }: { params: Promise<{ id: string }> }) {
   try {
     await requireAdmin();

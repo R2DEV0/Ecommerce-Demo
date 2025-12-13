@@ -4,6 +4,8 @@ import db, { initDatabase } from '@/lib/db';
 import { notFound } from 'next/navigation';
 import UserForm from '@/components/UserForm';
 
+export const dynamic = 'force-dynamic';
+
 export default async function EditUserPage({ params }: { params: Promise<{ id: string }> }) {
   try {
     await requireAdmin();

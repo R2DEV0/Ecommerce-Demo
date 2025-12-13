@@ -4,6 +4,8 @@ import db, { initDatabase } from '@/lib/db';
 import Link from 'next/link';
 import { Pencil } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminWebinarsPage() {
   try {
     await requireAdmin();

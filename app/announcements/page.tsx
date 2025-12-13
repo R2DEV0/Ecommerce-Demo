@@ -1,6 +1,8 @@
 import db, { initDatabase } from '@/lib/db';
 import Navbar from '@/components/Navbar';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AnnouncementsPage() {
   await initDatabase();
   

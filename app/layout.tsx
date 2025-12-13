@@ -3,7 +3,11 @@ import "./globals.css";
 import Chatbot from "@/components/Chatbot";
 import { CartProvider } from "@/contexts/CartContext";
 import Cart from "@/components/Cart";
+
 import { getSiteSettings } from "@/lib/siteSettings";
+
+// Force dynamic rendering - database may not be initialized during build
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettings();

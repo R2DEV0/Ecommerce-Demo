@@ -2,6 +2,9 @@ import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/auth';
 import db, { initDatabase } from '@/lib/db';
 import Link from 'next/link';
+
+export const dynamic = 'force-dynamic';
+
 import { 
   Package, 
   BookOpen, 

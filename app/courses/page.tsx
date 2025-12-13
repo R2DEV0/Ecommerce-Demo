@@ -2,6 +2,8 @@ import db, { initDatabase } from '@/lib/db';
 import Navbar from '@/components/Navbar';
 import Link from 'next/link';
 
+export const dynamic = 'force-dynamic';
+
 export default async function CoursesPage() {
   await initDatabase();
   

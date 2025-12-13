@@ -4,6 +4,8 @@ import db, { initDatabase } from '@/lib/db';
 import { notFound } from 'next/navigation';
 import AnnouncementForm from '@/components/AnnouncementForm';
 
+export const dynamic = 'force-dynamic';
+
 export default async function EditAnnouncementPage({ params }: { params: Promise<{ id: string }> }) {
   try {
     await requireAdmin();

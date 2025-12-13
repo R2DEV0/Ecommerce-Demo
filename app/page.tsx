@@ -4,6 +4,8 @@ import Footer from "@/components/Footer";
 import StatsCounter from "@/components/StatsCounter";
 import db, { initDatabase } from "@/lib/db";
 
+export const dynamic = 'force-dynamic';
+
 export default async function Home() {
   await initDatabase();
   

@@ -4,6 +4,8 @@ import db, { initDatabase } from '@/lib/db';
 import Link from 'next/link';
 import { Eye } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminOrdersPage() {
   try {
     await requireAdmin();

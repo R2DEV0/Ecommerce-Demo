@@ -4,6 +4,8 @@ import { notFound } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth';
 import EnrollButton from '@/components/EnrollButton';
 
+export const dynamic = 'force-dynamic';
+
 export default async function CoursePage({ params }: { params: Promise<{ id: string }> }) {
   await initDatabase();
   

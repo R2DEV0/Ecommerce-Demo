@@ -3,6 +3,8 @@ import Navbar from '@/components/Navbar';
 import { getCurrentUser } from '@/lib/auth';
 import RegisterButton from '@/components/RegisterButton';
 
+export const dynamic = 'force-dynamic';
+
 export default async function WebinarsPage() {
   await initDatabase();
   
