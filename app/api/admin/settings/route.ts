@@ -32,7 +32,7 @@ export async function PUT(request: NextRequest) {
               ON CONFLICT(setting_key) DO UPDATE SET
                 setting_value = excluded.setting_value,
                 updated_at = CURRENT_TIMESTAMP`,
-        args: [key, value || '']
+        args: [key, String(value || '')]
       });
     }
     
