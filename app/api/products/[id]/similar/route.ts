@@ -18,7 +18,7 @@ export async function GET(
             WHERE pt.product_id = ?`,
       args: [productId]
     });
-    const productTags = productTagsResult.rows as Array<{ id: number; name: string }>;
+    const productTags = productTagsResult.rows as unknown as Array<{ id: number; name: string }>;
 
     let similarProducts: any[] = [];
 
