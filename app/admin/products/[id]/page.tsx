@@ -40,7 +40,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
           ORDER BY t.name ASC`,
     args: [product.id]
   });
-  const tags = tagsResult.rows as Array<{ id: number; name: string }>;
+  const tags = tagsResult.rows as unknown as Array<{ id: number; name: string }>;
 
   return (
     <div className="w-full max-w-full">
