@@ -1,24 +1,15 @@
-import Database from 'better-sqlite3';
-import path from 'path';
-import fs from 'fs';
+import { createClient, Client } from '@libsql/client';
 
-const dbPath = path.join(process.cwd(), 'data', 'database.db');
-
-// Ensure data directory exists
-const dataDir = path.dirname(dbPath);
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
-}
-
-const db = new Database(dbPath);
-
-// Enable foreign keys
-db.pragma('foreign_keys = ON');
+// Create Turso client
+const db: Client = createClient({
+  url: process.env.TURSO_DATABASE_URL || 'file:local.db',
+  authToken: process.env.TURSO_AUTH_TOKEN,
+});
 
 // Initialize database schema
-export function initDatabase() {
+export async function initDatabase() {
   // Users table
-  db.exec(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       email TEXT UNIQUE NOT NULL,
@@ -34,7 +25,7 @@ export function initDatabase() {
   `);
 
   // Products table
-  db.exec(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS products (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
@@ -49,15 +40,8 @@ export function initDatabase() {
     )
   `);
 
-  // Add featured column if it doesn't exist (for existing databases)
-  try {
-    db.exec(`ALTER TABLE products ADD COLUMN featured INTEGER DEFAULT 0`);
-  } catch (e: any) {
-    // Column already exists, ignore
-  }
-
   // Product versions table
-  db.exec(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS product_versions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       product_id INTEGER NOT NULL,
@@ -72,20 +56,8 @@ export function initDatabase() {
     )
   `);
 
-  // Add variation_type and attribute_value columns if they don't exist (for existing databases)
-  try {
-    db.exec(`ALTER TABLE product_versions ADD COLUMN variation_type TEXT DEFAULT 'general'`);
-  } catch (e: any) {
-    // Column already exists, ignore
-  }
-  try {
-    db.exec(`ALTER TABLE product_versions ADD COLUMN attribute_value TEXT`);
-  } catch (e: any) {
-    // Column already exists, ignore
-  }
-
   // Courses table
-  db.exec(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS courses (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
@@ -99,7 +71,7 @@ export function initDatabase() {
   `);
 
   // Lessons table
-  db.exec(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS lessons (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       course_id INTEGER NOT NULL,
@@ -114,7 +86,7 @@ export function initDatabase() {
   `);
 
   // Course enrollments table
-  db.exec(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS course_enrollments (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL,
@@ -130,7 +102,7 @@ export function initDatabase() {
   `);
 
   // Lesson progress table
-  db.exec(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS lesson_progress (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       enrollment_id INTEGER NOT NULL,
@@ -145,7 +117,7 @@ export function initDatabase() {
   `);
 
   // Certificates table
-  db.exec(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS certificates (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL,
@@ -158,7 +130,7 @@ export function initDatabase() {
   `);
 
   // Announcements table
-  db.exec(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS announcements (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
@@ -172,7 +144,7 @@ export function initDatabase() {
   `);
 
   // Webinars table
-  db.exec(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS webinars (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
@@ -187,7 +159,7 @@ export function initDatabase() {
   `);
 
   // Webinar registrations table
-  db.exec(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS webinar_registrations (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL,
@@ -200,7 +172,7 @@ export function initDatabase() {
   `);
 
   // Orders table
-  db.exec(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS orders (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL,
@@ -212,7 +184,7 @@ export function initDatabase() {
   `);
 
   // Order items table
-  db.exec(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS order_items (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       order_id INTEGER NOT NULL,
@@ -227,7 +199,7 @@ export function initDatabase() {
   `);
 
   // Site settings table
-  db.exec(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS site_settings (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       setting_key TEXT UNIQUE NOT NULL,
@@ -237,7 +209,7 @@ export function initDatabase() {
   `);
 
   // Create media table
-  db.exec(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS media (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       filename TEXT NOT NULL,
@@ -257,7 +229,7 @@ export function initDatabase() {
   `);
 
   // Tags table
-  db.exec(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS tags (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT UNIQUE NOT NULL,
@@ -267,7 +239,7 @@ export function initDatabase() {
   `);
 
   // Product tags junction table
-  db.exec(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS product_tags (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       product_id INTEGER NOT NULL,
@@ -280,8 +252,12 @@ export function initDatabase() {
   `);
 
   // Initialize default site settings if not exists
-  const settingsExist = db.prepare('SELECT id FROM site_settings WHERE setting_key = ?').get('site_logo');
-  if (!settingsExist) {
+  const settingsExist = await db.execute({
+    sql: 'SELECT id FROM site_settings WHERE setting_key = ?',
+    args: ['site_logo']
+  });
+  
+  if (settingsExist.rows.length === 0) {
     const defaultSettings = [
       ['site_logo', '/media/newlogo.jpg'],
       ['site_favicon', '/favicon.ico'],
@@ -300,23 +276,22 @@ export function initDatabase() {
       ['copyright_text', ''],
     ];
     
-    const insertSetting = db.prepare('INSERT INTO site_settings (setting_key, setting_value) VALUES (?, ?)');
     for (const [key, value] of defaultSettings) {
-      insertSetting.run(key, value);
+      await db.execute({
+        sql: 'INSERT INTO site_settings (setting_key, setting_value) VALUES (?, ?)',
+        args: [key, value]
+      });
     }
   }
 
   // Create default admin user if not exists
   const bcrypt = require('bcryptjs');
   const hashedPassword = bcrypt.hashSync('admin123', 10);
-  db.prepare(`
-    INSERT OR IGNORE INTO users (email, password, name, role, can_add_users)
-    VALUES (?, ?, ?, ?, ?)
-  `).run('admin@example.com', hashedPassword, 'Admin User', 'admin', 1);
+  await db.execute({
+    sql: `INSERT OR IGNORE INTO users (email, password, name, role, can_add_users)
+          VALUES (?, ?, ?, ?, ?)`,
+    args: ['admin@example.com', hashedPassword, 'Admin User', 'admin', 1]
+  });
 }
 
-// Initialize database on import
-initDatabase();
-
 export default db;
-

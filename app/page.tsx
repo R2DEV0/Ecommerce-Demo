@@ -2,10 +2,12 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import StatsCounter from "@/components/StatsCounter";
-import db from "@/lib/db";
+import db, { initDatabase } from "@/lib/db";
 
-export default function Home() {
-  const featuredProducts = db.prepare(`
+export default async function Home() {
+  await initDatabase();
+  
+  const result = await db.execute(`
     SELECT p.*, 
            COUNT(pv.id) as version_count
     FROM products p
@@ -14,7 +16,8 @@ export default function Home() {
     GROUP BY p.id
     ORDER BY p.created_at DESC
     LIMIT 4
-  `).all() as any[];
+  `);
+  const featuredProducts = result.rows as any[];
 
   return (
     <>

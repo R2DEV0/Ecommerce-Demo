@@ -13,23 +13,23 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search');
     
     let query = 'SELECT * FROM media ORDER BY uploaded_at DESC';
-    const params: any[] = [];
+    const args: any[] = [];
     
     if (fileType) {
       query = 'SELECT * FROM media WHERE file_type = ? ORDER BY uploaded_at DESC';
-      params.push(fileType);
+      args.push(fileType);
     }
     
     if (search) {
       const whereClause = fileType ? 'AND' : 'WHERE';
       query = query.replace('ORDER BY', `${whereClause} (original_filename LIKE ? OR alt_text LIKE ?) ORDER BY`);
       const searchTerm = `%${search}%`;
-      params.push(searchTerm, searchTerm);
+      args.push(searchTerm, searchTerm);
     }
     
-    const media = db.prepare(query).all(...params) as any[];
+    const result = await db.execute({ sql: query, args });
     
-    return NextResponse.json({ media });
+    return NextResponse.json({ media: result.rows });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Failed to fetch media' }, { status: 500 });
   }
@@ -47,7 +47,11 @@ export async function DELETE(request: NextRequest) {
     }
     
     // Get media info
-    const media = db.prepare('SELECT * FROM media WHERE id = ?').get(parseInt(id)) as any;
+    const mediaResult = await db.execute({
+      sql: 'SELECT * FROM media WHERE id = ?',
+      args: [parseInt(id)]
+    });
+    const media = mediaResult.rows[0] as any;
     
     if (!media) {
       return NextResponse.json({ error: 'Media not found' }, { status: 404 });
@@ -63,11 +67,13 @@ export async function DELETE(request: NextRequest) {
     }
     
     // Delete from database
-    db.prepare('DELETE FROM media WHERE id = ?').run(parseInt(id));
+    await db.execute({
+      sql: 'DELETE FROM media WHERE id = ?',
+      args: [parseInt(id)]
+    });
     
     return NextResponse.json({ success: true });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Failed to delete media' }, { status: 500 });
   }
 }
-

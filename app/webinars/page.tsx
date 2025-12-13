@@ -1,10 +1,12 @@
-import db from '@/lib/db';
+import db, { initDatabase } from '@/lib/db';
 import Navbar from '@/components/Navbar';
 import { getCurrentUser } from '@/lib/auth';
 import RegisterButton from '@/components/RegisterButton';
 
 export default async function WebinarsPage() {
-  const webinars = db.prepare(`
+  await initDatabase();
+  
+  const result = await db.execute(`
     SELECT w.*,
            COUNT(wr.id) as registration_count
     FROM webinars w
@@ -12,7 +14,8 @@ export default async function WebinarsPage() {
     WHERE w.status = 'scheduled'
     GROUP BY w.id
     ORDER BY w.date_time ASC
-  `).all() as any[];
+  `);
+  const webinars = result.rows as any[];
 
   const user = await getCurrentUser();
 
@@ -69,4 +72,3 @@ export default async function WebinarsPage() {
     </>
   );
 }
-

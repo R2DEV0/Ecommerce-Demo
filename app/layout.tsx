@@ -6,7 +6,7 @@ import Cart from "@/components/Cart";
 import { getSiteSettings } from "@/lib/siteSettings";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const settings = getSiteSettings();
+  const settings = await getSiteSettings();
   
   const title = settings.meta_title || "Depth and Complexity Platform";
   const description = settings.meta_description || "Professional development and learning platform";
@@ -52,4 +52,3 @@ export default function RootLayout({
     </html>
   );
 }
-

@@ -1,23 +1,24 @@
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/auth';
-import db from '@/lib/db';
+import db, { initDatabase } from '@/lib/db';
 import Link from 'next/link';
 import { Eye } from 'lucide-react';
 
 export default async function AdminOrdersPage() {
-  let user;
   try {
-    user = await requireAdmin();
+    await requireAdmin();
   } catch {
     redirect('/login');
   }
 
-  const orders = db.prepare(`
+  await initDatabase();
+  const result = await db.execute(`
     SELECT o.*, u.name as user_name, u.email as user_email
     FROM orders o
     LEFT JOIN users u ON o.user_id = u.id
     ORDER BY o.created_at DESC
-  `).all() as any[];
+  `);
+  const orders = result.rows as any[];
 
   return (
     <div className="w-full max-w-full">
@@ -92,4 +93,3 @@ export default async function AdminOrdersPage() {
     </div>
   );
 }
-

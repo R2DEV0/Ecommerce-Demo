@@ -1,18 +1,24 @@
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/auth';
-import db from '@/lib/db';
+import db, { initDatabase } from '@/lib/db';
 import { notFound } from 'next/navigation';
 import UserForm from '@/components/UserForm';
 
-export default async function EditUserPage({ params }: { params: { id: string } }) {
-  let user;
+export default async function EditUserPage({ params }: { params: Promise<{ id: string }> }) {
   try {
-    user = await requireAdmin();
+    await requireAdmin();
   } catch {
     redirect('/login');
   }
 
-  const targetUser = db.prepare('SELECT * FROM users WHERE id = ?').get(parseInt(params.id)) as any;
+  await initDatabase();
+  const { id } = await params;
+
+  const result = await db.execute({
+    sql: 'SELECT * FROM users WHERE id = ?',
+    args: [parseInt(id)]
+  });
+  const targetUser = result.rows[0] as any;
   
   if (!targetUser) {
     notFound();
@@ -30,4 +36,3 @@ export default async function EditUserPage({ params }: { params: { id: string } 
     </div>
   );
 }
-

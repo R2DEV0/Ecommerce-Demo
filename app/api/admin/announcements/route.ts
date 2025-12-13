@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin, getCurrentUser } from '@/lib/auth';
+import { requireAdmin } from '@/lib/auth';
 import db from '@/lib/db';
 
 export async function POST(request: NextRequest) {
@@ -14,15 +14,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = db.prepare(`
-      INSERT INTO announcements (title, content, author_id, status)
-      VALUES (?, ?, ?, ?)
-    `).run(
-      title,
-      content,
-      user.id,
-      status || 'published'
-    );
+    const result = await db.execute({
+      sql: `INSERT INTO announcements (title, content, author_id, status)
+            VALUES (?, ?, ?, ?)`,
+      args: [title, content, user.id, status || 'published']
+    });
 
     return NextResponse.json({ success: true, announcementId: result.lastInsertRowid });
   } catch (error: any) {
@@ -39,4 +35,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

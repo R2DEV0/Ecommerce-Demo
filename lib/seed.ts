@@ -1,12 +1,15 @@
-import db from './db';
+import db, { initDatabase } from './db';
 import bcrypt from 'bcryptjs';
 
 export async function seedDatabase() {
   console.log('Seeding database...');
 
+  // Initialize database tables first
+  await initDatabase();
+
   // Check if already seeded
-  const productCount = db.prepare('SELECT COUNT(*) as count FROM products').get() as any;
-  if (productCount.count > 0) {
+  const productCount = await db.execute('SELECT COUNT(*) as count FROM products');
+  if (Number((productCount.rows[0] as any).count) > 0) {
     console.log('Database already seeded, skipping...');
     return { message: 'Database already seeded' };
   }
@@ -14,11 +17,12 @@ export async function seedDatabase() {
   // Create additional admin user
   const adminEmail = 'admin@depthcomplexity.com';
   const hashedPassword = await bcrypt.hash('admin123', 10);
-  const result = db.prepare(`
-    INSERT OR IGNORE INTO users (email, password, name, role, can_add_users)
-    VALUES (?, ?, ?, ?, ?)
-  `).run(adminEmail, hashedPassword, 'Admin User', 'admin', 1);
-  if (result.changes > 0) {
+  const result = await db.execute({
+    sql: `INSERT OR IGNORE INTO users (email, password, name, role, can_add_users)
+          VALUES (?, ?, ?, ?, ?)`,
+    args: [adminEmail, hashedPassword, 'Admin User', 'admin', 1]
+  });
+  if (result.rowsAffected > 0) {
     console.log('Created admin user:', adminEmail);
   }
 
@@ -78,57 +82,57 @@ export async function seedDatabase() {
       name: 'TALK Cards',
       description: 'Depth and Complexity TALK Cards: Thinking with Academic Language & Knowledge. Enhance student discourse.',
       price: 27.99,
-      image_url: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=800',
+      image_url: 'https://images.unsplash.com/photo-1577896851231-70ef18881754?w=800',
       category: 'Teaching Resources',
       featured: 0,
-      variations: []
+      variations: [
+        { name: 'Standard Edition', variation_type: 'general', price_modifier: 0, stock: 80 },
+      ]
     },
     {
-      name: 'Differentiation Guide',
-      description: 'Differentiation Smart Reference Guide. Quick access to differentiation strategies and techniques.',
-      price: 18.99,
-      image_url: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800',
-      category: 'Reference Materials',
-      featured: 0,
+      name: 'Poster Set',
+      description: 'Beautiful, durable classroom posters featuring all 11 Depth and Complexity icons with definitions and examples.',
+      price: 39.99,
+      image_url: 'https://images.unsplash.com/photo-1596495578065-6e0763fa1178?w=800',
+      category: 'Classroom Tools',
+      featured: 1,
       variations: [
-        { name: 'Print', variation_type: 'general', price_modifier: 0, stock: 80 },
-        { name: 'Digital', variation_type: 'general', price_modifier: -3, stock: null },
+        { name: 'Small (18x24)', variation_type: 'size', price_modifier: 0, stock: 45 },
+        { name: 'Large (24x36)', variation_type: 'size', price_modifier: 15, stock: 30 },
       ]
     },
   ];
 
-  const insertProduct = db.prepare(`
-    INSERT INTO products (name, description, price, image_url, category, status, featured)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-  `);
-
-  const insertVersion = db.prepare(`
-    INSERT INTO product_versions (product_id, name, variation_type, attribute_value, price_modifier, stock, sku)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-  `);
-
   for (const product of products) {
-    const result = insertProduct.run(
-      product.name,
-      product.description,
-      product.price,
-      product.image_url,
-      product.category,
-      'active',
-      product.featured
-    );
-    const productId = result.lastInsertRowid as number;
+    const result = await db.execute({
+      sql: `INSERT INTO products (name, description, price, image_url, category, status, featured)
+            VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      args: [
+        product.name,
+        product.description,
+        product.price,
+        product.image_url,
+        product.category,
+        'active',
+        product.featured
+      ]
+    });
+    const productId = result.lastInsertRowid;
 
     for (const variation of product.variations || []) {
-      insertVersion.run(
-        productId,
-        variation.name,
-        variation.variation_type,
-        (variation as { attribute_value?: string }).attribute_value || null,
-        variation.price_modifier,
-        variation.stock,
-        null
-      );
+      await db.execute({
+        sql: `INSERT INTO product_versions (product_id, name, variation_type, attribute_value, price_modifier, stock, sku)
+              VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        args: [
+          productId,
+          variation.name,
+          variation.variation_type,
+          (variation as { attribute_value?: string }).attribute_value || null,
+          variation.price_modifier,
+          variation.stock,
+          null
+        ]
+      });
     }
   }
 
@@ -143,181 +147,142 @@ export async function seedDatabase() {
       image_url: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800',
       status: 'published',
       lessons: [
-        { title: 'Welcome and Overview', content: 'Introduction to the course and what you will learn.', order_index: 1, duration: 300 },
-        { title: 'Understanding the 11 Icons', content: 'Deep dive into each of the 11 Depth and Complexity icons.', order_index: 2, duration: 1800 },
-        { title: 'Implementation Strategies', content: 'Practical strategies for implementing Depth and Complexity in your classroom.', order_index: 3, duration: 2400 },
-        { title: 'Assessment and Evaluation', content: 'How to assess student understanding using the framework.', order_index: 4, duration: 1800 },
+        { title: 'Welcome to Depth and Complexity', content: 'An introduction to the course and what you will learn.', order_index: 1 },
+        { title: 'The 11 Icons Overview', content: 'A brief overview of all 11 Depth and Complexity icons.', order_index: 2 },
+        { title: 'Why Use Depth and Complexity?', content: 'Understanding the benefits of using this framework in your classroom.', order_index: 3 },
       ]
     },
     {
-      title: 'Advanced Depth and Complexity Techniques',
-      description: 'Take your Depth and Complexity practice to the next level with advanced strategies and techniques.',
-      price: 99.99,
-      image_url: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800',
+      title: 'Deep Dive: The Icons of Depth',
+      description: 'An in-depth exploration of the Depth icons: Language of the Discipline, Details, Patterns, Rules, Trends, Unanswered Questions, and Ethics.',
+      price: 49.99,
+      image_url: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=800',
       status: 'published',
       lessons: [
-        { title: 'Advanced Icon Combinations', content: 'Learn how to combine multiple icons for deeper thinking.', order_index: 1, duration: 2400 },
-        { title: 'Content Imperatives Integration', content: 'Integrate Content Imperatives with Depth and Complexity.', order_index: 2, duration: 2100 },
-        { title: 'Cross-Curricular Applications', content: 'Apply Depth and Complexity across all subject areas.', order_index: 3, duration: 2700 },
-        { title: 'Student-Led Inquiry', content: 'Empower students to lead their own inquiry using the framework.', order_index: 4, duration: 2400 },
-        { title: 'Portfolio Development', content: 'Help students create portfolios showcasing their thinking.', order_index: 5, duration: 1800 },
+        { title: 'Language of the Discipline', content: 'Understanding specialized vocabulary in different fields.', order_index: 1 },
+        { title: 'Details', content: 'Learning to identify and analyze important details.', order_index: 2 },
+        { title: 'Patterns', content: 'Recognizing recurring elements and structures.', order_index: 3 },
+        { title: 'Rules', content: 'Understanding the rules that govern systems.', order_index: 4 },
+        { title: 'Trends', content: 'Identifying trends and their implications.', order_index: 5 },
+        { title: 'Unanswered Questions', content: 'Exploring the unknown and fostering curiosity.', order_index: 6 },
+        { title: 'Ethics', content: 'Examining ethical considerations in any topic.', order_index: 7 },
       ]
     },
     {
-      title: 'Depth and Complexity for Administrators',
-      description: 'Learn how to support and implement Depth and Complexity at the school and district level.',
-      price: 149.99,
-      image_url: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=800',
+      title: 'Complexity in Practice',
+      description: 'Master the Complexity icons: Big Idea, Multiple Perspectives, Over Time, and Across Disciplines.',
+      price: 49.99,
+      image_url: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800',
       status: 'published',
       lessons: [
-        { title: 'Leadership Overview', content: 'Understanding Depth and Complexity from an administrative perspective.', order_index: 1, duration: 1800 },
-        { title: 'Professional Development Planning', content: 'How to plan and deliver effective PD on Depth and Complexity.', order_index: 2, duration: 2400 },
-        { title: 'School-Wide Implementation', content: 'Strategies for implementing the framework across your school.', order_index: 3, duration: 2700 },
-        { title: 'Measuring Success', content: 'Metrics and methods for evaluating the impact of Depth and Complexity.', order_index: 4, duration: 2100 },
+        { title: 'Big Idea', content: 'Identifying the overarching concepts that connect learning.', order_index: 1 },
+        { title: 'Multiple Perspectives', content: 'Seeing topics from different viewpoints.', order_index: 2 },
+        { title: 'Over Time', content: 'Understanding how things change across time.', order_index: 3 },
+        { title: 'Across Disciplines', content: 'Making connections between different subject areas.', order_index: 4 },
+      ]
+    },
+    {
+      title: 'Advanced Implementation Strategies',
+      description: 'Take your Depth and Complexity teaching to the next level with advanced implementation strategies.',
+      price: 79.99,
+      image_url: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800',
+      status: 'draft',
+      lessons: [
+        { title: 'Layering Multiple Icons', content: 'How to effectively combine multiple icons in lessons.', order_index: 1 },
+        { title: 'Differentiation Strategies', content: 'Using D&C for differentiated instruction.', order_index: 2 },
+        { title: 'Assessment with D&C', content: 'Creating assessments that leverage the framework.', order_index: 3 },
       ]
     },
   ];
 
-  const insertCourse = db.prepare(`
-    INSERT INTO courses (title, description, price, image_url, status)
-    VALUES (?, ?, ?, ?, ?)
-  `);
-
-  const insertLesson = db.prepare(`
-    INSERT INTO lessons (course_id, title, content, order_index, duration)
-    VALUES (?, ?, ?, ?, ?)
-  `);
-
   for (const course of courses) {
-    const result = insertCourse.run(
-      course.title,
-      course.description,
-      course.price,
-      course.image_url,
-      course.status
-    );
-    const courseId = result.lastInsertRowid as number;
+    const result = await db.execute({
+      sql: `INSERT INTO courses (title, description, price, image_url, status)
+            VALUES (?, ?, ?, ?, ?)`,
+      args: [course.title, course.description, course.price, course.image_url, course.status]
+    });
+    const courseId = result.lastInsertRowid;
 
     for (const lesson of course.lessons) {
-      insertLesson.run(
-        courseId,
-        lesson.title,
-        lesson.content,
-        lesson.order_index,
-        lesson.duration
-      );
+      await db.execute({
+        sql: `INSERT INTO lessons (course_id, title, content, order_index)
+              VALUES (?, ?, ?, ?)`,
+        args: [courseId, lesson.title, lesson.content, lesson.order_index]
+      });
     }
   }
 
   console.log(`Created ${courses.length} courses`);
 
-  // Seed Announcements
-  const announcements = [
-    {
-      title: '2025-26 Online Trainer of Trainers (ToT) Cohort Now Open',
-      content: `We're excited to announce that registration is now open for our 2025-26 Online Trainer of Trainers (ToT) Cohort. This comprehensive program will prepare you to train others in the Depth and Complexity framework.
-
-Key features:
-- 12-week intensive training program
-- Live virtual sessions with expert facilitators
-- Access to exclusive resources and materials
-- Certification upon completion
-- Ongoing support and community access
-
-Spaces are limited, so register early to secure your spot!`,
-      author_id: 1,
-      status: 'published'
-    },
-    {
-      title: 'New Graphic Organizers Product Available',
-      content: `The highly anticipated Depth and Complexity Graphic Organizer product has arrived! This comprehensive collection includes templates for all 11 icons, designed to support student thinking and learning.
-
-Features:
-- Ready-to-use templates
-- Digital and print versions
-- Suitable for all grade levels
-- Aligned with Depth and Complexity framework
-
-Available now in our shop!`,
-      author_id: 1,
-      status: 'published'
-    },
-    {
-      title: 'Upcoming Webinar: Implementing Depth and Complexity in Elementary Classrooms',
-      content: `Join us for an interactive webinar on implementing Depth and Complexity in elementary classrooms. Our expert facilitators will share practical strategies, real-world examples, and answer your questions.
-
-Date: Next month
-Time: 4:00 PM EST
-Duration: 60 minutes
-
-Registration is free and open to all educators.`,
-      author_id: 1,
-      status: 'published'
-    },
-  ];
-
-  const insertAnnouncement = db.prepare(`
-    INSERT INTO announcements (title, content, author_id, status)
-    VALUES (?, ?, ?, ?)
-  `);
-
-  for (const announcement of announcements) {
-    insertAnnouncement.run(
-      announcement.title,
-      announcement.content,
-      announcement.author_id,
-      announcement.status
-    );
-  }
-
-  console.log(`Created ${announcements.length} announcements`);
-
   // Seed Webinars
   const webinars = [
     {
-      title: 'Introduction to Depth and Complexity Framework',
-      description: 'Perfect for educators new to Depth and Complexity. Learn the basics and get started with implementation.',
-      date_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
+      title: 'Getting Started with Depth and Complexity',
+      description: 'A beginner-friendly webinar introducing the framework and its classroom applications.',
+      date_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
       duration: 60,
-      meeting_url: 'https://zoom.us/j/example',
+      meeting_url: 'https://zoom.us/j/example1',
       status: 'scheduled'
     },
     {
-      title: 'Advanced Strategies for Gifted Education',
-      description: 'Explore advanced techniques for using Depth and Complexity with gifted and talented students.',
-      date_time: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days from now
+      title: 'Advanced Icon Combinations',
+      description: 'Learn how to layer multiple icons for deeper learning experiences.',
+      date_time: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
       duration: 90,
       meeting_url: 'https://zoom.us/j/example2',
       status: 'scheduled'
     },
     {
-      title: 'Depth and Complexity in Math Instruction',
-      description: 'Learn how to integrate Depth and Complexity into your math curriculum for deeper understanding.',
-      date_time: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString(), // 21 days from now
-      duration: 75,
+      title: 'Q&A Session: Your D&C Questions Answered',
+      description: 'An open Q&A session where we answer your Depth and Complexity questions.',
+      date_time: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString(),
+      duration: 45,
       meeting_url: 'https://zoom.us/j/example3',
       status: 'scheduled'
     },
   ];
 
-  const insertWebinar = db.prepare(`
-    INSERT INTO webinars (title, description, date_time, duration, meeting_url, status)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `);
-
   for (const webinar of webinars) {
-    insertWebinar.run(
-      webinar.title,
-      webinar.description,
-      webinar.date_time,
-      webinar.duration,
-      webinar.meeting_url,
-      webinar.status
-    );
+    await db.execute({
+      sql: `INSERT INTO webinars (title, description, date_time, duration, meeting_url, status)
+            VALUES (?, ?, ?, ?, ?, ?)`,
+      args: [webinar.title, webinar.description, webinar.date_time, webinar.duration, webinar.meeting_url, webinar.status]
+    });
   }
 
   console.log(`Created ${webinars.length} webinars`);
+
+  // Seed Announcements
+  const announcements = [
+    {
+      title: 'Welcome to Our New Platform!',
+      content: 'We are excited to launch our new Depth and Complexity learning platform. Explore our courses, products, and upcoming webinars!',
+      status: 'published'
+    },
+    {
+      title: 'New Course Coming Soon',
+      content: 'Stay tuned for our upcoming Advanced Implementation Strategies course. Perfect for educators ready to take their D&C practice to the next level.',
+      status: 'published'
+    },
+  ];
+
+  // Get admin user id
+  const adminUser = await db.execute({
+    sql: 'SELECT id FROM users WHERE email = ?',
+    args: ['admin@example.com']
+  });
+  const adminId = adminUser.rows[0] ? Number((adminUser.rows[0] as any).id) : 1;
+
+  for (const announcement of announcements) {
+    await db.execute({
+      sql: `INSERT INTO announcements (title, content, author_id, status)
+            VALUES (?, ?, ?, ?)`,
+      args: [announcement.title, announcement.content, adminId, announcement.status]
+    });
+  }
+
+  console.log(`Created ${announcements.length} announcements`);
+
   console.log('Database seeding completed!');
   return { message: 'Database seeded successfully' };
 }
-

@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '@/lib/db';
+import db, { initDatabase } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
+    await initDatabase();
+    
     const { searchParams } = new URL(request.url);
     const tags = searchParams.get('tags')?.split(',').filter(Boolean) || [];
     const category = searchParams.get('category') || '';
@@ -55,10 +57,11 @@ export async function GET(request: NextRequest) {
 
     query += ` GROUP BY p.id ORDER BY p.created_at DESC`;
 
-    const products = db.prepare(query).all(...params) as any[];
+    const productsResult = await db.execute({ sql: query, args: params });
+    const products = productsResult.rows;
 
     // Get all available tags for filtering
-    const allTags = db.prepare(`
+    const allTagsResult = await db.execute(`
       SELECT DISTINCT t.id, t.name, COUNT(pt.product_id) as product_count
       FROM tags t
       INNER JOIN product_tags pt ON t.id = pt.tag_id
@@ -66,30 +69,30 @@ export async function GET(request: NextRequest) {
       WHERE p.status = 'active'
       GROUP BY t.id, t.name
       ORDER BY t.name ASC
-    `).all() as Array<{ id: number; name: string; product_count: number }>;
+    `);
 
     // Get all categories
-    const categories = db.prepare(`
+    const categoriesResult = await db.execute(`
       SELECT DISTINCT category, COUNT(*) as product_count
       FROM products
       WHERE status = 'active' AND category IS NOT NULL AND category != ''
       GROUP BY category
       ORDER BY category ASC
-    `).all() as Array<{ category: string; product_count: number }>;
+    `);
 
     // Get price range
-    const priceRange = db.prepare(`
+    const priceRangeResult = await db.execute(`
       SELECT MIN(price) as min_price, MAX(price) as max_price
       FROM products
       WHERE status = 'active'
-    `).get() as { min_price: number; max_price: number };
+    `);
 
     return NextResponse.json({
       products,
       filters: {
-        tags: allTags,
-        categories,
-        priceRange,
+        tags: allTagsResult.rows,
+        categories: categoriesResult.rows,
+        priceRange: priceRangeResult.rows[0] || { min_price: 0, max_price: 100 },
       },
     });
   } catch (error) {
@@ -100,4 +103,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/auth';
-import db from '@/lib/db';
+import db, { initDatabase } from '@/lib/db';
 import Link from 'next/link';
 import { 
   Package, 
@@ -21,21 +21,31 @@ export default async function AdminPage() {
     redirect('/login');
   }
 
+  await initDatabase();
+
   // Get stats
-  const totalUsers = db.prepare('SELECT COUNT(*) as count FROM users').get() as { count: number };
-  const totalProducts = db.prepare('SELECT COUNT(*) as count FROM products').get() as { count: number };
-  const totalCourses = db.prepare('SELECT COUNT(*) as count FROM courses').get() as { count: number };
-  const totalAnnouncements = db.prepare('SELECT COUNT(*) as count FROM announcements').get() as { count: number };
-  const totalWebinars = db.prepare('SELECT COUNT(*) as count FROM webinars').get() as { count: number };
-  const totalOrders = db.prepare('SELECT COUNT(*) as count FROM orders').get() as { count: number };
-  const totalRevenue = db.prepare('SELECT COALESCE(SUM(total_amount), 0) as total FROM orders WHERE status = ?').get('completed') as { total: number };
-  const pendingOrders = db.prepare('SELECT COUNT(*) as count FROM orders WHERE status = ?').get('pending') as { count: number };
-  const completedOrders = db.prepare('SELECT COUNT(*) as count FROM orders WHERE status = ?').get('completed') as { count: number };
+  const totalUsersResult = await db.execute('SELECT COUNT(*) as count FROM users');
+  const totalProductsResult = await db.execute('SELECT COUNT(*) as count FROM products');
+  const totalCoursesResult = await db.execute('SELECT COUNT(*) as count FROM courses');
+  const totalAnnouncementsResult = await db.execute('SELECT COUNT(*) as count FROM announcements');
+  const totalWebinarsResult = await db.execute('SELECT COUNT(*) as count FROM webinars');
+  const totalOrdersResult = await db.execute('SELECT COUNT(*) as count FROM orders');
+  const totalRevenueResult = await db.execute({ sql: 'SELECT COALESCE(SUM(total_amount), 0) as total FROM orders WHERE status = ?', args: ['completed'] });
+  const pendingOrdersResult = await db.execute({ sql: 'SELECT COUNT(*) as count FROM orders WHERE status = ?', args: ['pending'] });
+
+  const totalUsers = (totalUsersResult.rows[0] as any)?.count || 0;
+  const totalProducts = (totalProductsResult.rows[0] as any)?.count || 0;
+  const totalCourses = (totalCoursesResult.rows[0] as any)?.count || 0;
+  const totalAnnouncements = (totalAnnouncementsResult.rows[0] as any)?.count || 0;
+  const totalWebinars = (totalWebinarsResult.rows[0] as any)?.count || 0;
+  const totalOrders = (totalOrdersResult.rows[0] as any)?.count || 0;
+  const totalRevenue = (totalRevenueResult.rows[0] as any)?.total || 0;
+  const pendingOrders = (pendingOrdersResult.rows[0] as any)?.count || 0;
 
   const stats = [
     {
       label: 'Total Users',
-      value: totalUsers.count,
+      value: totalUsers,
       icon: Users,
       color: 'text-blue-600',
       bgColor: 'bg-blue-100',
@@ -43,7 +53,7 @@ export default async function AdminPage() {
     },
     {
       label: 'Products',
-      value: totalProducts.count,
+      value: totalProducts,
       icon: Package,
       color: 'text-green-600',
       bgColor: 'bg-green-100',
@@ -51,7 +61,7 @@ export default async function AdminPage() {
     },
     {
       label: 'Courses',
-      value: totalCourses.count,
+      value: totalCourses,
       icon: BookOpen,
       color: 'text-purple-600',
       bgColor: 'bg-purple-100',
@@ -59,7 +69,7 @@ export default async function AdminPage() {
     },
     {
       label: 'Announcements',
-      value: totalAnnouncements.count,
+      value: totalAnnouncements,
       icon: Megaphone,
       color: 'text-orange-600',
       bgColor: 'bg-orange-100',
@@ -67,7 +77,7 @@ export default async function AdminPage() {
     },
     {
       label: 'Webinars',
-      value: totalWebinars.count,
+      value: totalWebinars,
       icon: Video,
       color: 'text-red-600',
       bgColor: 'bg-red-100',
@@ -75,7 +85,7 @@ export default async function AdminPage() {
     },
     {
       label: 'Total Orders',
-      value: totalOrders.count,
+      value: totalOrders,
       icon: ShoppingCart,
       color: 'text-indigo-600',
       bgColor: 'bg-indigo-100',
@@ -83,7 +93,7 @@ export default async function AdminPage() {
     },
     {
       label: 'Pending Orders',
-      value: pendingOrders.count,
+      value: pendingOrders,
       icon: TrendingUp,
       color: 'text-yellow-600',
       bgColor: 'bg-yellow-100',
@@ -91,7 +101,7 @@ export default async function AdminPage() {
     },
     {
       label: 'Total Revenue',
-      value: `$${parseFloat(totalRevenue.total.toString()).toFixed(2)}`,
+      value: `$${parseFloat(totalRevenue.toString()).toFixed(2)}`,
       icon: DollarSign,
       color: 'text-emerald-600',
       bgColor: 'bg-emerald-100',
@@ -171,4 +181,3 @@ export default async function AdminPage() {
     </div>
   );
 }
-

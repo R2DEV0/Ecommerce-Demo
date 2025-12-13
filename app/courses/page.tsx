@@ -1,9 +1,11 @@
-import db from '@/lib/db';
+import db, { initDatabase } from '@/lib/db';
 import Navbar from '@/components/Navbar';
 import Link from 'next/link';
 
-export default function CoursesPage() {
-  const courses = db.prepare(`
+export default async function CoursesPage() {
+  await initDatabase();
+  
+  const result = await db.execute(`
     SELECT c.*, 
            COUNT(l.id) as lesson_count
     FROM courses c
@@ -11,7 +13,8 @@ export default function CoursesPage() {
     WHERE c.status = 'published'
     GROUP BY c.id
     ORDER BY c.created_at DESC
-  `).all() as any[];
+  `);
+  const courses = result.rows as any[];
 
   return (
     <>
@@ -61,4 +64,3 @@ export default function CoursesPage() {
     </>
   );
 }
-

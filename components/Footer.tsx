@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { getSiteSettings } from '@/lib/siteSettings';
 
-export default function Footer() {
-  const settings = getSiteSettings();
+export default async function Footer() {
+  const settings = await getSiteSettings();
   const companyName = settings.company_name || 'The Center for Depth and Complexity';
   const companyDescription = settings.company_description || 'Empowering learners to be independent thinkers and creative problem-solvers through the Depth and Complexity framework.';
   const currentYear = new Date().getFullYear();
@@ -189,4 +189,3 @@ export default function Footer() {
     </footer>
   );
 }
-

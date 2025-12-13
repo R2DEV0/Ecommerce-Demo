@@ -16,8 +16,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user exists
-    const existingUser = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
-    if (existingUser) {
+    const existingResult = await db.execute({
+      sql: 'SELECT id FROM users WHERE email = ?',
+      args: [email]
+    });
+    if (existingResult.rows.length > 0) {
       return NextResponse.json(
         { error: 'User with this email already exists' },
         { status: 400 }
@@ -26,17 +29,18 @@ export async function POST(request: NextRequest) {
 
     const hashedPassword = await hashPassword(password);
 
-    const result = db.prepare(`
-      INSERT INTO users (name, email, password, role, parent_user_id, can_add_users)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).run(
-      name,
-      email,
-      hashedPassword,
-      role || 'subscriber',
-      parent_user_id || null,
-      can_add_users || 0
-    );
+    const result = await db.execute({
+      sql: `INSERT INTO users (name, email, password, role, parent_user_id, can_add_users)
+            VALUES (?, ?, ?, ?, ?, ?)`,
+      args: [
+        name,
+        email,
+        hashedPassword,
+        role || 'subscriber',
+        parent_user_id || null,
+        can_add_users || 0
+      ]
+    });
 
     return NextResponse.json({ success: true, userId: result.lastInsertRowid });
   } catch (error: any) {
@@ -53,4 +57,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

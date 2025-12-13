@@ -14,17 +14,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = db.prepare(`
-      INSERT INTO webinars (title, description, date_time, duration, meeting_url, status)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).run(
-      title,
-      description || null,
-      date_time,
-      duration || 60,
-      meeting_url || null,
-      status || 'scheduled'
-    );
+    const result = await db.execute({
+      sql: `INSERT INTO webinars (title, description, date_time, duration, meeting_url, status)
+            VALUES (?, ?, ?, ?, ?, ?)`,
+      args: [
+        title,
+        description || null,
+        date_time,
+        duration || 60,
+        meeting_url || null,
+        status || 'scheduled'
+      ]
+    });
 
     return NextResponse.json({ success: true, webinarId: result.lastInsertRowid });
   } catch (error: any) {
@@ -41,4 +42,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

@@ -1,23 +1,24 @@
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/auth';
-import db from '@/lib/db';
+import db, { initDatabase } from '@/lib/db';
 import Link from 'next/link';
 import { Pencil } from 'lucide-react';
 
 export default async function AdminAnnouncementsPage() {
-  let user;
   try {
-    user = await requireAdmin();
+    await requireAdmin();
   } catch {
     redirect('/login');
   }
 
-  const announcements = db.prepare(`
+  await initDatabase();
+  const result = await db.execute(`
     SELECT a.*, u.name as author_name
     FROM announcements a
     LEFT JOIN users u ON a.author_id = u.id
     ORDER BY a.created_at DESC
-  `).all() as any[];
+  `);
+  const announcements = result.rows as any[];
 
   return (
     <div className="w-full max-w-full">
@@ -90,4 +91,3 @@ export default async function AdminAnnouncementsPage() {
     </div>
   );
 }
-

@@ -1,29 +1,40 @@
-import db from '@/lib/db';
+import db, { initDatabase } from '@/lib/db';
 import Navbar from '@/components/Navbar';
 import { notFound } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth';
 import EnrollButton from '@/components/EnrollButton';
 
-export default async function CoursePage({ params }: { params: { id: string } }) {
-  const course = db.prepare('SELECT * FROM courses WHERE id = ?').get(parseInt(params.id)) as any;
+export default async function CoursePage({ params }: { params: Promise<{ id: string }> }) {
+  await initDatabase();
+  
+  const { id } = await params;
+  const courseResult = await db.execute({
+    sql: 'SELECT * FROM courses WHERE id = ?',
+    args: [parseInt(id)]
+  });
+  const course = courseResult.rows[0] as any;
   
   if (!course) {
     notFound();
   }
 
-  const lessons = db.prepare(`
-    SELECT * FROM lessons 
-    WHERE course_id = ? 
-    ORDER BY order_index ASC
-  `).all(course.id) as any[];
+  const lessonsResult = await db.execute({
+    sql: `SELECT * FROM lessons 
+          WHERE course_id = ? 
+          ORDER BY order_index ASC`,
+    args: [course.id]
+  });
+  const lessons = lessonsResult.rows as any[];
 
   const user = await getCurrentUser();
   let enrollment = null;
   if (user) {
-    enrollment = db.prepare(`
-      SELECT * FROM course_enrollments 
-      WHERE user_id = ? AND course_id = ?
-    `).get(user.id, course.id) as any;
+    const enrollmentResult = await db.execute({
+      sql: `SELECT * FROM course_enrollments 
+            WHERE user_id = ? AND course_id = ?`,
+      args: [user.id, course.id]
+    });
+    enrollment = enrollmentResult.rows[0] as any;
   }
 
   return (
@@ -100,4 +111,3 @@ export default async function CoursePage({ params }: { params: { id: string } })
     </>
   );
 }
-

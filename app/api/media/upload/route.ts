@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
-import { requireAdmin } from '@/lib/auth';
 import db from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 
@@ -31,7 +30,6 @@ export async function POST(request: NextRequest) {
     // Generate unique filename
     const timestamp = Date.now();
     const originalFilename = file.name;
-    const fileExtension = originalFilename.split('.').pop();
     const filename = `${timestamp}-${originalFilename.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
     const filePath = join(mediaDir, filename);
 
@@ -48,40 +46,27 @@ export async function POST(request: NextRequest) {
     const fileType = file.type.split('/')[0]; // 'image', 'video', 'application', etc.
 
     // Get image dimensions if it's an image
-    // Note: Dimensions are optional and will be null if sharp is not installed
-    // To get image dimensions, install sharp: npm install sharp
     let width: number | null = null;
     let height: number | null = null;
 
-    // Optional: Uncomment the code below if you install sharp
-    // if (fileType === 'image') {
-    //   try {
-    //     const sharp = require('sharp');
-    //     const metadata = await sharp(buffer).metadata();
-    //     width = metadata.width || null;
-    //     height = metadata.height || null;
-    //   } catch (err) {
-    //     // Sharp not available or failed
-    //   }
-    // }
-
     // Save to database
-    const result = db.prepare(`
-      INSERT INTO media (filename, original_filename, file_path, file_type, mime_type, file_size, width, height, alt_text, description, uploaded_by)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      filename,
-      originalFilename,
-      `/media/${filename}`,
-      fileType,
-      mimeType,
-      fileSize,
-      width,
-      height,
-      altText,
-      description,
-      user.id
-    );
+    const result = await db.execute({
+      sql: `INSERT INTO media (filename, original_filename, file_path, file_type, mime_type, file_size, width, height, alt_text, description, uploaded_by)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [
+        filename,
+        originalFilename,
+        `/media/${filename}`,
+        fileType,
+        mimeType,
+        fileSize,
+        width,
+        height,
+        altText,
+        description,
+        user.id
+      ]
+    });
 
     return NextResponse.json({
       id: result.lastInsertRowid,
@@ -101,4 +86,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error.message || 'Failed to upload file' }, { status: 500 });
   }
 }
-

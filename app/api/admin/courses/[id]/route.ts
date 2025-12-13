@@ -4,12 +4,13 @@ import db from '@/lib/db';
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await requireAdmin();
     const { course, lessons } = await request.json();
-    const courseId = parseInt(params.id);
+    const { id } = await params;
+    const courseId = parseInt(id);
 
     if (!course.title || course.price === undefined) {
       return NextResponse.json(
@@ -19,39 +20,42 @@ export async function PUT(
     }
 
     // Update course
-    db.prepare(`
-      UPDATE courses 
-      SET title = ?, description = ?, price = ?, image_url = ?, status = ?, updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `).run(
-      course.title,
-      course.description || null,
-      course.price,
-      course.image_url || null,
-      course.status || 'draft',
-      courseId
-    );
+    await db.execute({
+      sql: `UPDATE courses 
+            SET title = ?, description = ?, price = ?, image_url = ?, status = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?`,
+      args: [
+        course.title,
+        course.description || null,
+        course.price,
+        course.image_url || null,
+        course.status || 'draft',
+        courseId
+      ]
+    });
 
     // Delete existing lessons
-    db.prepare('DELETE FROM lessons WHERE course_id = ?').run(courseId);
+    await db.execute({
+      sql: 'DELETE FROM lessons WHERE course_id = ?',
+      args: [courseId]
+    });
 
     // Insert new lessons
     if (lessons && Array.isArray(lessons)) {
-      const insertLesson = db.prepare(`
-        INSERT INTO lessons (course_id, title, content, order_index, duration, video_url)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `);
-
       for (const lesson of lessons) {
         if (lesson.title) {
-          insertLesson.run(
-            courseId,
-            lesson.title,
-            lesson.content || null,
-            lesson.order_index || 1,
-            lesson.duration || 0,
-            lesson.video_url || null
-          );
+          await db.execute({
+            sql: `INSERT INTO lessons (course_id, title, content, order_index, duration, video_url)
+                  VALUES (?, ?, ?, ?, ?, ?)`,
+            args: [
+              courseId,
+              lesson.title,
+              lesson.content || null,
+              lesson.order_index || 1,
+              lesson.duration || 0,
+              lesson.video_url || null
+            ]
+          });
         }
       }
     }
@@ -71,4 +75,3 @@ export async function PUT(
     );
   }
 }
-

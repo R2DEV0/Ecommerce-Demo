@@ -1,25 +1,26 @@
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/auth';
-import db from '@/lib/db';
+import db, { initDatabase } from '@/lib/db';
 import Link from 'next/link';
 import { Pencil } from 'lucide-react';
 
 export default async function AdminWebinarsPage() {
-  let user;
   try {
-    user = await requireAdmin();
+    await requireAdmin();
   } catch {
     redirect('/login');
   }
 
-  const webinars = db.prepare(`
+  await initDatabase();
+  const result = await db.execute(`
     SELECT w.*,
            COUNT(wr.id) as registration_count
     FROM webinars w
     LEFT JOIN webinar_registrations wr ON w.id = wr.webinar_id
     GROUP BY w.id
     ORDER BY w.date_time DESC
-  `).all() as any[];
+  `);
+  const webinars = result.rows as any[];
 
   return (
     <div className="w-full max-w-full">
@@ -97,4 +98,3 @@ export default async function AdminWebinarsPage() {
     </div>
   );
 }
-

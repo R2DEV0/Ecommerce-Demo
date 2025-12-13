@@ -15,36 +15,36 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert course
-    const result = db.prepare(`
-      INSERT INTO courses (title, description, price, image_url, status)
-      VALUES (?, ?, ?, ?, ?)
-    `).run(
-      course.title,
-      course.description || null,
-      course.price,
-      course.image_url || null,
-      course.status || 'draft'
-    );
+    const result = await db.execute({
+      sql: `INSERT INTO courses (title, description, price, image_url, status)
+            VALUES (?, ?, ?, ?, ?)`,
+      args: [
+        course.title,
+        course.description || null,
+        course.price,
+        course.image_url || null,
+        course.status || 'draft'
+      ]
+    });
 
-    const courseId = result.lastInsertRowid as number;
+    const courseId = result.lastInsertRowid;
 
     // Insert lessons
     if (lessons && Array.isArray(lessons)) {
-      const insertLesson = db.prepare(`
-        INSERT INTO lessons (course_id, title, content, order_index, duration, video_url)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `);
-
       for (const lesson of lessons) {
         if (lesson.title) {
-          insertLesson.run(
-            courseId,
-            lesson.title,
-            lesson.content || null,
-            lesson.order_index || 1,
-            lesson.duration || 0,
-            lesson.video_url || null
-          );
+          await db.execute({
+            sql: `INSERT INTO lessons (course_id, title, content, order_index, duration, video_url)
+                  VALUES (?, ?, ?, ?, ?, ?)`,
+            args: [
+              courseId,
+              lesson.title,
+              lesson.content || null,
+              lesson.order_index || 1,
+              lesson.duration || 0,
+              lesson.video_url || null
+            ]
+          });
         }
       }
     }
@@ -64,4 +64,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

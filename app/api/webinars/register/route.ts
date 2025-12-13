@@ -15,8 +15,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if webinar exists
-    const webinar = db.prepare('SELECT * FROM webinars WHERE id = ?').get(webinarId) as any;
-    if (!webinar) {
+    const webinarResult = await db.execute({
+      sql: 'SELECT * FROM webinars WHERE id = ?',
+      args: [webinarId]
+    });
+    if (webinarResult.rows.length === 0) {
       return NextResponse.json(
         { error: 'Webinar not found' },
         { status: 404 }
@@ -24,12 +27,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if already registered
-    const existing = db.prepare(`
-      SELECT id FROM webinar_registrations 
-      WHERE user_id = ? AND webinar_id = ?
-    `).get(user.id, webinarId);
+    const existingResult = await db.execute({
+      sql: `SELECT id FROM webinar_registrations 
+            WHERE user_id = ? AND webinar_id = ?`,
+      args: [user.id, webinarId]
+    });
 
-    if (existing) {
+    if (existingResult.rows.length > 0) {
       return NextResponse.json(
         { error: 'Already registered' },
         { status: 400 }
@@ -37,10 +41,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Create registration
-    db.prepare(`
-      INSERT INTO webinar_registrations (user_id, webinar_id)
-      VALUES (?, ?)
-    `).run(user.id, webinarId);
+    await db.execute({
+      sql: `INSERT INTO webinar_registrations (user_id, webinar_id)
+            VALUES (?, ?)`,
+      args: [user.id, webinarId]
+    });
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
@@ -57,4 +62,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

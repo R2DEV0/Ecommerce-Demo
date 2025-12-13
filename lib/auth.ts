@@ -33,15 +33,19 @@ export function createToken(user: User): string {
 export async function verifyToken(token: string): Promise<User | null> {
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as any;
-    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(decoded.id) as any;
+    const result = await db.execute({
+      sql: 'SELECT * FROM users WHERE id = ?',
+      args: [decoded.id]
+    });
+    const user = result.rows[0] as any;
     if (!user) return null;
     return {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
-      parent_user_id: user.parent_user_id,
-      can_add_users: user.can_add_users,
+      id: Number(user.id),
+      email: user.email as string,
+      name: user.name as string,
+      role: user.role as 'admin' | 'subscriber' | 'manager',
+      parent_user_id: user.parent_user_id ? Number(user.parent_user_id) : undefined,
+      can_add_users: Number(user.can_add_users),
     };
   } catch {
     return null;
@@ -75,13 +79,16 @@ export function canUserAddUsers(user: User): boolean {
   return user.role === 'admin' || user.can_add_users === 1;
 }
 
-export function canUserManageUser(user: User, targetUserId: number): boolean {
+export async function canUserManageUser(user: User, targetUserId: number): Promise<boolean> {
   if (user.role === 'admin') return true;
   if (user.can_add_users === 1) {
     // Check if target user is under this user
-    const targetUser = db.prepare('SELECT parent_user_id FROM users WHERE id = ?').get(targetUserId) as any;
+    const result = await db.execute({
+      sql: 'SELECT parent_user_id FROM users WHERE id = ?',
+      args: [targetUserId]
+    });
+    const targetUser = result.rows[0] as any;
     return targetUser?.parent_user_id === user.id;
   }
   return false;
 }
-

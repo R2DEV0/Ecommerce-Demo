@@ -1,22 +1,23 @@
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/auth';
 import SiteSettingsForm from '@/components/SiteSettingsForm';
-import db from '@/lib/db';
+import db, { initDatabase } from '@/lib/db';
 
 export default async function SiteSettingsPage() {
-  let user;
   try {
-    user = await requireAdmin();
+    await requireAdmin();
   } catch {
     redirect('/login');
   }
 
+  await initDatabase();
+  
   // Get all site settings
-  const settings = db.prepare('SELECT setting_key, setting_value FROM site_settings').all() as Array<{ setting_key: string; setting_value: string | null }>;
+  const result = await db.execute('SELECT setting_key, setting_value FROM site_settings');
   
   // Convert to object for easier access
   const settingsObj: Record<string, string> = {};
-  settings.forEach(setting => {
+  result.rows.forEach((setting: any) => {
     settingsObj[setting.setting_key] = setting.setting_value || '';
   });
 
@@ -29,4 +30,3 @@ export default async function SiteSettingsPage() {
     </div>
   );
 }
-

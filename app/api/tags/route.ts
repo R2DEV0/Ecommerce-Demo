@@ -3,13 +3,13 @@ import db from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
-    const tags = db.prepare(`
+    const result = await db.execute(`
       SELECT id, name, slug 
       FROM tags 
       ORDER BY name ASC
-    `).all() as Array<{ id: number; name: string; slug: string }>;
+    `);
 
-    return NextResponse.json({ tags });
+    return NextResponse.json({ tags: result.rows });
   } catch (error) {
     console.error('Tags fetch error:', error);
     return NextResponse.json(
@@ -18,4 +18,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

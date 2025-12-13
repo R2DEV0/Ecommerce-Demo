@@ -5,10 +5,10 @@ import db from '@/lib/db';
 export async function GET() {
   try {
     // Public endpoint - no auth required for reading settings
-    const settings = db.prepare('SELECT setting_key, setting_value FROM site_settings').all() as Array<{ setting_key: string; setting_value: string | null }>;
+    const result = await db.execute('SELECT setting_key, setting_value FROM site_settings');
     
     const settingsObj: Record<string, string> = {};
-    settings.forEach(setting => {
+    result.rows.forEach((setting: any) => {
       settingsObj[setting.setting_key] = setting.setting_value || '';
     });
     
@@ -25,25 +25,19 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     
     // Update each setting
-    const updateStmt = db.prepare(`
-      INSERT INTO site_settings (setting_key, setting_value, updated_at)
-      VALUES (?, ?, CURRENT_TIMESTAMP)
-      ON CONFLICT(setting_key) DO UPDATE SET
-        setting_value = excluded.setting_value,
-        updated_at = CURRENT_TIMESTAMP
-    `);
-    
-    const transaction = db.transaction(() => {
-      for (const [key, value] of Object.entries(body)) {
-        updateStmt.run(key, value || '');
-      }
-    });
-    
-    transaction();
+    for (const [key, value] of Object.entries(body)) {
+      await db.execute({
+        sql: `INSERT INTO site_settings (setting_key, setting_value, updated_at)
+              VALUES (?, ?, CURRENT_TIMESTAMP)
+              ON CONFLICT(setting_key) DO UPDATE SET
+                setting_value = excluded.setting_value,
+                updated_at = CURRENT_TIMESTAMP`,
+        args: [key, value || '']
+      });
+    }
     
     return NextResponse.json({ success: true });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Failed to update settings' }, { status: 500 });
   }
 }
-

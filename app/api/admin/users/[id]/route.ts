@@ -5,12 +5,13 @@ import { hashPassword } from '@/lib/auth';
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await requireAdmin();
     const { name, email, password, role, parent_user_id, can_add_users } = await request.json();
-    const userId = parseInt(params.id);
+    const { id } = await params;
+    const userId = parseInt(id);
 
     if (!name || !email) {
       return NextResponse.json(
@@ -20,8 +21,11 @@ export async function PUT(
     }
 
     // Check if email is taken by another user
-    const existingUser = db.prepare('SELECT id FROM users WHERE email = ? AND id != ?').get(email, userId);
-    if (existingUser) {
+    const existingResult = await db.execute({
+      sql: 'SELECT id FROM users WHERE email = ? AND id != ?',
+      args: [email, userId]
+    });
+    if (existingResult.rows.length > 0) {
       return NextResponse.json(
         { error: 'User with this email already exists' },
         { status: 400 }
@@ -29,29 +33,24 @@ export async function PUT(
     }
 
     // Build update query based on whether password is being updated
-    let updateQuery: string;
-    let updateParams: any[];
-
     if (password && password.length >= 6) {
       // Update with password
       const hashedPassword = await hashPassword(password);
-      updateQuery = `
-        UPDATE users 
-        SET name = ?, email = ?, password = ?, role = ?, parent_user_id = ?, can_add_users = ?, updated_at = CURRENT_TIMESTAMP
-        WHERE id = ?
-      `;
-      updateParams = [name, email, hashedPassword, role || 'subscriber', parent_user_id || null, can_add_users || 0, userId];
+      await db.execute({
+        sql: `UPDATE users 
+              SET name = ?, email = ?, password = ?, role = ?, parent_user_id = ?, can_add_users = ?, updated_at = CURRENT_TIMESTAMP
+              WHERE id = ?`,
+        args: [name, email, hashedPassword, role || 'subscriber', parent_user_id || null, can_add_users || 0, userId]
+      });
     } else {
       // Update without password
-      updateQuery = `
-        UPDATE users 
-        SET name = ?, email = ?, role = ?, parent_user_id = ?, can_add_users = ?, updated_at = CURRENT_TIMESTAMP
-        WHERE id = ?
-      `;
-      updateParams = [name, email, role || 'subscriber', parent_user_id || null, can_add_users || 0, userId];
+      await db.execute({
+        sql: `UPDATE users 
+              SET name = ?, email = ?, role = ?, parent_user_id = ?, can_add_users = ?, updated_at = CURRENT_TIMESTAMP
+              WHERE id = ?`,
+        args: [name, email, role || 'subscriber', parent_user_id || null, can_add_users || 0, userId]
+      });
     }
-
-    db.prepare(updateQuery).run(...updateParams);
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
@@ -71,15 +70,19 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await requireAdmin();
-    const userId = parseInt(params.id);
+    const { id } = await params;
+    const userId = parseInt(id);
 
     // Check if user exists
-    const user = db.prepare('SELECT id FROM users WHERE id = ?').get(userId);
-    if (!user) {
+    const userResult = await db.execute({
+      sql: 'SELECT id FROM users WHERE id = ?',
+      args: [userId]
+    });
+    if (userResult.rows.length === 0) {
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
@@ -87,7 +90,10 @@ export async function DELETE(
     }
 
     // Delete user (cascade will handle related records)
-    db.prepare('DELETE FROM users WHERE id = ?').run(userId);
+    await db.execute({
+      sql: 'DELETE FROM users WHERE id = ?',
+      args: [userId]
+    });
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
@@ -104,4 +110,3 @@ export async function DELETE(
     );
   }
 }
-

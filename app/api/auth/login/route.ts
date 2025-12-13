@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '@/lib/db';
+import db, { initDatabase } from '@/lib/db';
 import { verifyPassword, createToken } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
+    await initDatabase();
+    
     const { email, password } = await request.json();
 
     if (!email || !password) {
@@ -13,7 +15,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email) as any;
+    const result = await db.execute({
+      sql: 'SELECT * FROM users WHERE email = ?',
+      args: [email]
+    });
+    const user = result.rows[0] as any;
     
     if (!user) {
       return NextResponse.json(
@@ -32,17 +38,17 @@ export async function POST(request: NextRequest) {
     }
 
     const token = createToken({
-      id: user.id,
+      id: Number(user.id),
       email: user.email,
       name: user.name,
       role: user.role,
-      parent_user_id: user.parent_user_id,
-      can_add_users: user.can_add_users,
+      parent_user_id: user.parent_user_id ? Number(user.parent_user_id) : undefined,
+      can_add_users: Number(user.can_add_users),
     });
 
     const response = NextResponse.json({
       user: {
-        id: user.id,
+        id: Number(user.id),
         email: user.email,
         name: user.name,
         role: user.role,
@@ -65,4 +71,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

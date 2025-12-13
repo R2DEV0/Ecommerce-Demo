@@ -1,25 +1,26 @@
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/auth';
-import db from '@/lib/db';
+import db, { initDatabase } from '@/lib/db';
 import Link from 'next/link';
 import { Pencil } from 'lucide-react';
 import DeleteUserButton from '@/components/DeleteUserButton';
 
 export default async function AdminUsersPage() {
-  let user;
   try {
-    user = await requireAdmin();
+    await requireAdmin();
   } catch {
     redirect('/login');
   }
 
-  const users = db.prepare(`
+  await initDatabase();
+  const result = await db.execute(`
     SELECT u.*, 
            parent.name as parent_name
     FROM users u
     LEFT JOIN users parent ON u.parent_user_id = parent.id
     ORDER BY u.created_at DESC
-  `).all() as any[];
+  `);
+  const users = result.rows as any[];
 
   return (
     <div className="w-full max-w-full">
@@ -103,4 +104,3 @@ export default async function AdminUsersPage() {
     </div>
   );
 }
-

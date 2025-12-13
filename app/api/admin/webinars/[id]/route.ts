@@ -4,12 +4,13 @@ import db from '@/lib/db';
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await requireAdmin();
     const { title, description, date_time, duration, meeting_url, status } = await request.json();
-    const webinarId = parseInt(params.id);
+    const { id } = await params;
+    const webinarId = parseInt(id);
 
     if (!title || !date_time) {
       return NextResponse.json(
@@ -18,19 +19,20 @@ export async function PUT(
       );
     }
 
-    db.prepare(`
-      UPDATE webinars 
-      SET title = ?, description = ?, date_time = ?, duration = ?, meeting_url = ?, status = ?, updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `).run(
-      title,
-      description || null,
-      date_time,
-      duration || 60,
-      meeting_url || null,
-      status || 'scheduled',
-      webinarId
-    );
+    await db.execute({
+      sql: `UPDATE webinars 
+            SET title = ?, description = ?, date_time = ?, duration = ?, meeting_url = ?, status = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?`,
+      args: [
+        title,
+        description || null,
+        date_time,
+        duration || 60,
+        meeting_url || null,
+        status || 'scheduled',
+        webinarId
+      ]
+    });
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
@@ -47,4 +49,3 @@ export async function PUT(
     );
   }
 }
-

@@ -1,18 +1,19 @@
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/auth';
-import db from '@/lib/db';
+import db, { initDatabase } from '@/lib/db';
 import Link from 'next/link';
 import { Pencil } from 'lucide-react';
 
 export default async function AdminProductsPage() {
-  let user;
   try {
-    user = await requireAdmin();
+    await requireAdmin();
   } catch {
     redirect('/login');
   }
 
-  const products = db.prepare('SELECT * FROM products ORDER BY created_at DESC').all() as any[];
+  await initDatabase();
+  const result = await db.execute('SELECT * FROM products ORDER BY created_at DESC');
+  const products = result.rows as any[];
 
   return (
     <div className="w-full max-w-full">
@@ -79,4 +80,3 @@ export default async function AdminProductsPage() {
     </div>
   );
 }
-

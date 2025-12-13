@@ -22,7 +22,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Get current user's password hash
-    const dbUser = db.prepare('SELECT password FROM users WHERE id = ?').get(user.id) as any;
+    const result = await db.execute({
+      sql: 'SELECT password FROM users WHERE id = ?',
+      args: [user.id]
+    });
+    const dbUser = result.rows[0] as any;
     
     if (!dbUser) {
       return NextResponse.json(
@@ -45,10 +49,10 @@ export async function POST(request: NextRequest) {
     const hashedPassword = await hashPassword(newPassword);
 
     // Update password
-    db.prepare('UPDATE users SET password = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(
-      hashedPassword,
-      user.id
-    );
+    await db.execute({
+      sql: 'UPDATE users SET password = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      args: [hashedPassword, user.id]
+    });
 
     return NextResponse.json({ success: true, message: 'Password changed successfully' });
   } catch (error: any) {
@@ -65,4 +69,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

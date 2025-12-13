@@ -28,36 +28,36 @@ Always be helpful and guide users to the most relevant resources on the platform
 
 async function getSiteContext() {
   // Fetch current products
-  const products = db.prepare(`
+  const productsResult = await db.execute(`
     SELECT name, description, price, category
     FROM products
     WHERE status = 'active'
     ORDER BY featured DESC, created_at DESC
     LIMIT 10
-  `).all() as any[];
+  `);
 
   // Fetch current courses
-  const courses = db.prepare(`
+  const coursesResult = await db.execute(`
     SELECT title, description, price, status
     FROM courses
     WHERE status = 'published'
     ORDER BY created_at DESC
     LIMIT 10
-  `).all() as any[];
+  `);
 
   // Fetch upcoming webinars
-  const webinars = db.prepare(`
+  const webinarsResult = await db.execute(`
     SELECT title, description, date_time, duration
     FROM webinars
     WHERE status = 'scheduled' AND date_time > datetime('now')
     ORDER BY date_time ASC
     LIMIT 5
-  `).all() as any[];
+  `);
 
   return {
-    products,
-    courses,
-    webinars,
+    products: productsResult.rows,
+    courses: coursesResult.rows,
+    webinars: webinarsResult.rows,
   };
 }
 
@@ -173,49 +173,6 @@ export async function POST(request: NextRequest) {
       response += `Feel free to ask me anything specific!`;
     }
 
-    // OpenAI Integration (uncomment when ready to use)
-    // To enable: 1) Add OPENAI_API_KEY to .env.local, 2) Uncomment this block, 3) Comment out the keyword-based response above
-    /*
-    if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json(
-        { error: 'OpenAI API key not configured' },
-        { status: 500 }
-      );
-    }
-
-    try {
-      const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini', // Use gpt-4o-mini for cost efficiency, or gpt-4 for better quality
-          messages: [
-            { role: 'system', content: SYSTEM_PROMPT + contextString },
-            ...(conversationHistory || []),
-            { role: 'user', content: message },
-          ],
-          temperature: 0.7,
-          max_tokens: 500,
-        }),
-      });
-
-      if (!openaiResponse.ok) {
-        const errorData = await openaiResponse.json();
-        console.error('OpenAI API error:', errorData);
-        throw new Error('OpenAI API request failed');
-      }
-
-      const data = await openaiResponse.json();
-      response = data.choices[0]?.message?.content || 'I apologize, but I encountered an error processing your request.';
-    } catch (error) {
-      console.error('OpenAI integration error:', error);
-      // Fallback to keyword-based response if OpenAI fails
-    }
-    */
-
     return NextResponse.json({ response });
   } catch (error) {
     console.error('Chatbot error:', error);
@@ -225,4 +182,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

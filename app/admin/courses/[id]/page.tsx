@@ -1,28 +1,36 @@
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/auth';
-import db from '@/lib/db';
+import db, { initDatabase } from '@/lib/db';
 import { notFound } from 'next/navigation';
 import CourseForm from '@/components/CourseForm';
 
-export default async function EditCoursePage({ params }: { params: { id: string } }) {
-  let user;
+export default async function EditCoursePage({ params }: { params: Promise<{ id: string }> }) {
   try {
-    user = await requireAdmin();
+    await requireAdmin();
   } catch {
     redirect('/login');
   }
 
-  const course = db.prepare('SELECT * FROM courses WHERE id = ?').get(parseInt(params.id)) as any;
+  await initDatabase();
+  const { id } = await params;
+
+  const courseResult = await db.execute({
+    sql: 'SELECT * FROM courses WHERE id = ?',
+    args: [parseInt(id)]
+  });
+  const course = courseResult.rows[0] as any;
   
   if (!course) {
     notFound();
   }
 
-  const lessons = db.prepare(`
-    SELECT * FROM lessons 
-    WHERE course_id = ? 
-    ORDER BY order_index ASC
-  `).all(course.id) as any[];
+  const lessonsResult = await db.execute({
+    sql: `SELECT * FROM lessons 
+          WHERE course_id = ? 
+          ORDER BY order_index ASC`,
+    args: [course.id]
+  });
+  const lessons = lessonsResult.rows as any[];
 
   return (
     <div className="w-full max-w-full">
@@ -33,4 +41,3 @@ export default async function EditCoursePage({ params }: { params: { id: string 
     </div>
   );
 }
-

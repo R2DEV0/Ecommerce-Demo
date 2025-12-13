@@ -1,18 +1,21 @@
 import db from './db';
 
-export function getSiteSettings(): Record<string, string> {
-  const settings = db.prepare('SELECT setting_key, setting_value FROM site_settings').all() as Array<{ setting_key: string; setting_value: string | null }>;
+export async function getSiteSettings(): Promise<Record<string, string>> {
+  const result = await db.execute('SELECT setting_key, setting_value FROM site_settings');
   
   const settingsObj: Record<string, string> = {};
-  settings.forEach(setting => {
+  result.rows.forEach((setting: any) => {
     settingsObj[setting.setting_key] = setting.setting_value || '';
   });
   
   return settingsObj;
 }
 
-export function getSiteSetting(key: string, defaultValue: string = ''): string {
-  const setting = db.prepare('SELECT setting_value FROM site_settings WHERE setting_key = ?').get(key) as { setting_value: string | null } | undefined;
+export async function getSiteSetting(key: string, defaultValue: string = ''): Promise<string> {
+  const result = await db.execute({
+    sql: 'SELECT setting_value FROM site_settings WHERE setting_key = ?',
+    args: [key]
+  });
+  const setting = result.rows[0] as any;
   return setting?.setting_value || defaultValue;
 }
-

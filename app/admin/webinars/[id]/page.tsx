@@ -1,18 +1,24 @@
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/auth';
-import db from '@/lib/db';
+import db, { initDatabase } from '@/lib/db';
 import { notFound } from 'next/navigation';
 import WebinarForm from '@/components/WebinarForm';
 
-export default async function EditWebinarPage({ params }: { params: { id: string } }) {
-  let user;
+export default async function EditWebinarPage({ params }: { params: Promise<{ id: string }> }) {
   try {
-    user = await requireAdmin();
+    await requireAdmin();
   } catch {
     redirect('/login');
   }
 
-  const webinar = db.prepare('SELECT * FROM webinars WHERE id = ?').get(parseInt(params.id)) as any;
+  await initDatabase();
+  const { id } = await params;
+
+  const result = await db.execute({
+    sql: 'SELECT * FROM webinars WHERE id = ?',
+    args: [parseInt(id)]
+  });
+  const webinar = result.rows[0] as any;
   
   if (!webinar) {
     notFound();
@@ -27,4 +33,3 @@ export default async function EditWebinarPage({ params }: { params: { id: string
     </div>
   );
 }
-

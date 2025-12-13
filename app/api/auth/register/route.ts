@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '@/lib/db';
+import db, { initDatabase } from '@/lib/db';
 import { hashPassword, createToken, getCurrentUser, canUserAddUsers } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
+    await initDatabase();
+    
     const { email, password, name, role = 'subscriber', parent_user_id } = await request.json();
 
     if (!email || !password || !name) {
@@ -14,8 +16,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user exists
-    const existingUser = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
-    if (existingUser) {
+    const existingResult = await db.execute({
+      sql: 'SELECT id FROM users WHERE email = ?',
+      args: [email]
+    });
+    if (existingResult.rows.length > 0) {
       return NextResponse.json(
         { error: 'User already exists' },
         { status: 400 }
@@ -49,25 +54,30 @@ export async function POST(request: NextRequest) {
 
     const hashedPassword = await hashPassword(password);
 
-    const result = db.prepare(`
-      INSERT INTO users (email, password, name, role, parent_user_id, can_add_users)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).run(email, hashedPassword, name, role, finalParentId || null, canAddUsers);
+    const result = await db.execute({
+      sql: `INSERT INTO users (email, password, name, role, parent_user_id, can_add_users)
+            VALUES (?, ?, ?, ?, ?, ?)`,
+      args: [email, hashedPassword, name, role, finalParentId || null, canAddUsers]
+    });
 
-    const newUser = db.prepare('SELECT * FROM users WHERE id = ?').get(result.lastInsertRowid) as any;
+    const newUserResult = await db.execute({
+      sql: 'SELECT * FROM users WHERE id = ?',
+      args: [result.lastInsertRowid]
+    });
+    const newUser = newUserResult.rows[0] as any;
 
     const token = createToken({
-      id: newUser.id,
+      id: Number(newUser.id),
       email: newUser.email,
       name: newUser.name,
       role: newUser.role,
-      parent_user_id: newUser.parent_user_id,
-      can_add_users: newUser.can_add_users,
+      parent_user_id: newUser.parent_user_id ? Number(newUser.parent_user_id) : undefined,
+      can_add_users: Number(newUser.can_add_users),
     });
 
     const response = NextResponse.json({
       user: {
-        id: newUser.id,
+        id: Number(newUser.id),
         email: newUser.email,
         name: newUser.name,
         role: newUser.role,
@@ -90,4 +100,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

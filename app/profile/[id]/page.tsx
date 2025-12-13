@@ -1,4 +1,4 @@
-import db from '@/lib/db';
+import db, { initDatabase } from '@/lib/db';
 import Navbar from '@/components/Navbar';
 import { getCurrentUser } from '@/lib/auth';
 import { notFound, redirect } from 'next/navigation';
@@ -16,8 +16,11 @@ import {
   GraduationCap
 } from 'lucide-react';
 
-export default async function ProfilePage({ params }: { params: { id: string } }) {
-  const profileUserId = parseInt(params.id);
+export default async function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
+  await initDatabase();
+  
+  const { id } = await params;
+  const profileUserId = parseInt(id);
   const currentUser = await getCurrentUser();
   
   // If not logged in, show 404
@@ -31,36 +34,46 @@ export default async function ProfilePage({ params }: { params: { id: string } }
     redirect(`/profile/${currentUser.id}`);
   }
 
-  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(profileUserId) as any;
+  const userResult = await db.execute({
+    sql: 'SELECT * FROM users WHERE id = ?',
+    args: [profileUserId]
+  });
+  const user = userResult.rows[0] as any;
   if (!user) {
     notFound();
   }
 
-  const enrollments = db.prepare(`
-    SELECT ce.*, c.title as course_title, c.id as course_id, c.image_url
-    FROM course_enrollments ce
-    JOIN courses c ON ce.course_id = c.id
-    WHERE ce.user_id = ?
-    ORDER BY ce.enrolled_at DESC
-  `).all(profileUserId) as any[];
+  const enrollmentsResult = await db.execute({
+    sql: `SELECT ce.*, c.title as course_title, c.id as course_id, c.image_url
+          FROM course_enrollments ce
+          JOIN courses c ON ce.course_id = c.id
+          WHERE ce.user_id = ?
+          ORDER BY ce.enrolled_at DESC`,
+    args: [profileUserId]
+  });
+  const enrollments = enrollmentsResult.rows as any[];
 
-  const certificates = db.prepare(`
-    SELECT cert.*, c.title as course_title
-    FROM certificates cert
-    JOIN courses c ON cert.course_id = c.id
-    WHERE cert.user_id = ?
-    ORDER BY cert.issued_at DESC
-  `).all(profileUserId) as any[];
+  const certificatesResult = await db.execute({
+    sql: `SELECT cert.*, c.title as course_title
+          FROM certificates cert
+          JOIN courses c ON cert.course_id = c.id
+          WHERE cert.user_id = ?
+          ORDER BY cert.issued_at DESC`,
+    args: [profileUserId]
+  });
+  const certificates = certificatesResult.rows as any[];
 
-  const orders = db.prepare(`
-    SELECT o.*, COUNT(oi.id) as item_count
-    FROM orders o
-    LEFT JOIN order_items oi ON o.id = oi.order_id
-    WHERE o.user_id = ?
-    GROUP BY o.id
-    ORDER BY o.created_at DESC
-    LIMIT 5
-  `).all(profileUserId) as any[];
+  const ordersResult = await db.execute({
+    sql: `SELECT o.*, COUNT(oi.id) as item_count
+          FROM orders o
+          LEFT JOIN order_items oi ON o.id = oi.order_id
+          WHERE o.user_id = ?
+          GROUP BY o.id
+          ORDER BY o.created_at DESC
+          LIMIT 5`,
+    args: [profileUserId]
+  });
+  const orders = ordersResult.rows as any[];
 
   // Get user initials for avatar
   const initials = user.name
@@ -73,7 +86,7 @@ export default async function ProfilePage({ params }: { params: { id: string } }
   // Calculate stats
   const completedCourses = enrollments.filter((e: any) => e.completed).length;
   const totalProgress = enrollments.length > 0
-    ? Math.round(enrollments.reduce((sum: number, e: any) => sum + e.progress, 0) / enrollments.length)
+    ? Math.round(enrollments.reduce((sum: number, e: any) => sum + Number(e.progress), 0) / enrollments.length)
     : 0;
 
   return (
@@ -351,4 +364,3 @@ export default async function ProfilePage({ params }: { params: { id: string } }
     </>
   );
 }
-

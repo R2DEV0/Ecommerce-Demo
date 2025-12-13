@@ -1,14 +1,17 @@
-import db from '@/lib/db';
+import db, { initDatabase } from '@/lib/db';
 import Navbar from '@/components/Navbar';
 
-export default function AnnouncementsPage() {
-  const announcements = db.prepare(`
+export default async function AnnouncementsPage() {
+  await initDatabase();
+  
+  const result = await db.execute(`
     SELECT a.*, u.name as author_name
     FROM announcements a
     LEFT JOIN users u ON a.author_id = u.id
     WHERE a.status = 'published'
     ORDER BY a.created_at DESC
-  `).all() as any[];
+  `);
+  const announcements = result.rows as any[];
 
   return (
     <>
@@ -45,4 +48,3 @@ export default function AnnouncementsPage() {
     </>
   );
 }
-

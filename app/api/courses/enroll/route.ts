@@ -15,8 +15,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if course exists
-    const course = db.prepare('SELECT * FROM courses WHERE id = ?').get(courseId) as any;
-    if (!course) {
+    const courseResult = await db.execute({
+      sql: 'SELECT * FROM courses WHERE id = ?',
+      args: [courseId]
+    });
+    if (courseResult.rows.length === 0) {
       return NextResponse.json(
         { error: 'Course not found' },
         { status: 404 }
@@ -24,12 +27,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if already enrolled
-    const existing = db.prepare(`
-      SELECT id FROM course_enrollments 
-      WHERE user_id = ? AND course_id = ?
-    `).get(user.id, courseId);
+    const existingResult = await db.execute({
+      sql: `SELECT id FROM course_enrollments 
+            WHERE user_id = ? AND course_id = ?`,
+      args: [user.id, courseId]
+    });
 
-    if (existing) {
+    if (existingResult.rows.length > 0) {
       return NextResponse.json(
         { error: 'Already enrolled' },
         { status: 400 }
@@ -37,10 +41,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Create enrollment
-    db.prepare(`
-      INSERT INTO course_enrollments (user_id, course_id)
-      VALUES (?, ?)
-    `).run(user.id, courseId);
+    await db.execute({
+      sql: `INSERT INTO course_enrollments (user_id, course_id)
+            VALUES (?, ?)`,
+      args: [user.id, courseId]
+    });
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
@@ -57,4 +62,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

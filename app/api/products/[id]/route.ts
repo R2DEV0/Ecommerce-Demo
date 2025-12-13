@@ -3,12 +3,17 @@ import db from '@/lib/db';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const productId = parseInt(params.id);
+    const { id } = await params;
+    const productId = parseInt(id);
     
-    const product = db.prepare('SELECT * FROM products WHERE id = ?').get(productId) as any;
+    const productResult = await db.execute({
+      sql: 'SELECT * FROM products WHERE id = ?',
+      args: [productId]
+    });
+    const product = productResult.rows[0];
     
     if (!product) {
       return NextResponse.json(
@@ -17,15 +22,16 @@ export async function GET(
       );
     }
 
-    const versions = db.prepare(`
-      SELECT * FROM product_versions 
-      WHERE product_id = ? 
-      ORDER BY variation_type, name
-    `).all(productId) as any[];
+    const versionsResult = await db.execute({
+      sql: `SELECT * FROM product_versions 
+            WHERE product_id = ? 
+            ORDER BY variation_type, name`,
+      args: [productId]
+    });
 
     return NextResponse.json({
       product,
-      versions,
+      versions: versionsResult.rows,
     });
   } catch (error) {
     console.error('Product fetch error:', error);
@@ -35,4 +41,3 @@ export async function GET(
     );
   }
 }
-

@@ -1,18 +1,19 @@
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/auth';
-import db from '@/lib/db';
+import db, { initDatabase } from '@/lib/db';
 import Link from 'next/link';
 import { Pencil } from 'lucide-react';
 
 export default async function AdminCoursesPage() {
-  let user;
   try {
-    user = await requireAdmin();
+    await requireAdmin();
   } catch {
     redirect('/login');
   }
 
-  const courses = db.prepare('SELECT * FROM courses ORDER BY created_at DESC').all() as any[];
+  await initDatabase();
+  const result = await db.execute('SELECT * FROM courses ORDER BY created_at DESC');
+  const courses = result.rows as any[];
 
   return (
     <div className="w-full max-w-full">
@@ -81,4 +82,3 @@ export default async function AdminCoursesPage() {
     </div>
   );
 }
-
