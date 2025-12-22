@@ -13,7 +13,9 @@ import {
   Video, 
   ShoppingCart,
   TrendingUp,
-  DollarSign
+  DollarSign,
+  Plus,
+  ArrowUpRight
 } from 'lucide-react';
 
 export default async function AdminPage() {
@@ -50,89 +52,104 @@ export default async function AdminPage() {
       label: 'Total Users',
       value: totalUsers,
       icon: Users,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100',
+      gradient: 'from-blue-500 to-cyan-500',
+      shadowColor: 'shadow-blue-500/20',
       href: '/admin/users',
     },
     {
       label: 'Products',
       value: totalProducts,
       icon: Package,
-      color: 'text-green-600',
-      bgColor: 'bg-green-100',
+      gradient: 'from-emerald-500 to-teal-500',
+      shadowColor: 'shadow-emerald-500/20',
       href: '/admin/products',
     },
     {
       label: 'Courses',
       value: totalCourses,
       icon: BookOpen,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-100',
+      gradient: 'from-violet-500 to-purple-500',
+      shadowColor: 'shadow-violet-500/20',
       href: '/admin/courses',
     },
     {
-      label: 'Announcements',
-      value: totalAnnouncements,
-      icon: Megaphone,
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-100',
-      href: '/admin/announcements',
-    },
-    {
-      label: 'Webinars',
-      value: totalWebinars,
-      icon: Video,
-      color: 'text-red-600',
-      bgColor: 'bg-red-100',
-      href: '/admin/webinars',
-    },
-    {
-      label: 'Total Orders',
-      value: totalOrders,
-      icon: ShoppingCart,
-      color: 'text-indigo-600',
-      bgColor: 'bg-indigo-100',
-      href: '/admin/orders',
-    },
-    {
-      label: 'Pending Orders',
-      value: pendingOrders,
-      icon: TrendingUp,
-      color: 'text-yellow-600',
-      bgColor: 'bg-yellow-100',
-      href: '/admin/orders',
-    },
-    {
       label: 'Total Revenue',
-      value: `$${parseFloat(totalRevenue.toString()).toFixed(2)}`,
+      value: `$${parseFloat(totalRevenue.toString()).toFixed(0)}`,
       icon: DollarSign,
-      color: 'text-emerald-600',
-      bgColor: 'bg-emerald-100',
+      gradient: 'from-amber-500 to-orange-500',
+      shadowColor: 'shadow-amber-500/20',
       href: '/admin/orders',
     },
   ];
 
+  const secondaryStats = [
+    { label: 'Announcements', value: totalAnnouncements, icon: Megaphone, href: '/admin/announcements' },
+    { label: 'Webinars', value: totalWebinars, icon: Video, href: '/admin/webinars' },
+    { label: 'Total Orders', value: totalOrders, icon: ShoppingCart, href: '/admin/orders' },
+    { label: 'Pending Orders', value: pendingOrders, icon: TrendingUp, href: '/admin/orders' },
+  ];
+
+  const quickActions = [
+    { label: 'Add Product', description: 'Create a new product', href: '/admin/products/new', icon: Package },
+    { label: 'Add Course', description: 'Create a new course', href: '/admin/courses/new', icon: BookOpen },
+    { label: 'Add User', description: 'Create user account', href: '/admin/users/new', icon: Users },
+    { label: 'New Announcement', description: 'Publish an update', href: '/admin/announcements/new', icon: Megaphone },
+    { label: 'Schedule Webinar', description: 'Plan a webinar', href: '/admin/webinars/new', icon: Video },
+  ];
+
   return (
-    <div>
-      <h1 className="text-2xl font-normal mb-6 text-[#1d2327]">Dashboard</h1>
+    <div className="space-y-8">
+      {/* Welcome Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-slate-900">Welcome back! 👋</h1>
+        <p className="mt-1 text-slate-500">Here&apos;s what&apos;s happening with your platform today.</p>
+      </div>
       
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
+      {/* Primary Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
             <Link
               key={stat.label}
               href={stat.href}
-              className="bg-white border border-[#c3c4c7] rounded-sm p-4 md:p-6 hover:shadow-md transition-shadow"
+              className={`group relative bg-white rounded-2xl p-6 border border-slate-100 hover:border-slate-200 transition-all duration-300 hover:shadow-xl ${stat.shadowColor}`}
             >
-              <div className="flex items-center justify-between">
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs md:text-sm text-[#646970] mb-1">{stat.label}</p>
-                  <p className="text-2xl md:text-3xl font-semibold text-[#1d2327] truncate">{stat.value}</p>
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-500">{stat.label}</p>
+                  <p className="mt-2 text-3xl font-bold text-slate-900">{stat.value}</p>
                 </div>
-                <div className={`${stat.bgColor} ${stat.color} p-2 md:p-3 rounded-full flex-shrink-0 ml-2`}>
-                  <Icon className="w-5 h-5 md:w-6 md:h-6" />
+                <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.gradient} shadow-lg`}>
+                  <Icon className="w-6 h-6 text-white" />
+                </div>
+              </div>
+              <div className="mt-4 flex items-center text-sm text-slate-500 group-hover:text-indigo-600 transition-colors">
+                <span>View details</span>
+                <ArrowUpRight className="w-4 h-4 ml-1 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* Secondary Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {secondaryStats.map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <Link
+              key={stat.label}
+              href={stat.href}
+              className="group bg-white rounded-xl p-4 border border-slate-100 hover:border-indigo-200 hover:bg-indigo-50/50 transition-all duration-200"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-slate-100 group-hover:bg-indigo-100 transition-colors">
+                  <Icon className="w-5 h-5 text-slate-600 group-hover:text-indigo-600 transition-colors" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
+                  <p className="text-xs text-slate-500">{stat.label}</p>
                 </div>
               </div>
             </Link>
@@ -141,44 +158,30 @@ export default async function AdminPage() {
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white border border-[#c3c4c7] rounded-sm p-4 md:p-6">
-        <h2 className="text-base md:text-lg font-normal mb-3 md:mb-4 text-[#1d2327]">Quick Actions</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-          <Link
-            href="/admin/products/new"
-            className="border border-[#c3c4c7] rounded-sm p-3 md:p-4 hover:bg-[#f6f7f7] transition-colors"
-          >
-            <h3 className="font-medium text-sm md:text-base text-[#1d2327] mb-1">Add New Product</h3>
-            <p className="text-xs md:text-sm text-[#646970]">Create a new product for your shop</p>
-          </Link>
-          <Link
-            href="/admin/courses/new"
-            className="border border-[#c3c4c7] rounded-sm p-3 md:p-4 hover:bg-[#f6f7f7] transition-colors"
-          >
-            <h3 className="font-medium text-sm md:text-base text-[#1d2327] mb-1">Add New Course</h3>
-            <p className="text-xs md:text-sm text-[#646970]">Create a new course with lessons</p>
-          </Link>
-          <Link
-            href="/admin/users/new"
-            className="border border-[#c3c4c7] rounded-sm p-3 md:p-4 hover:bg-[#f6f7f7] transition-colors"
-          >
-            <h3 className="font-medium text-sm md:text-base text-[#1d2327] mb-1">Add New User</h3>
-            <p className="text-xs md:text-sm text-[#646970]">Create a new user account</p>
-          </Link>
-          <Link
-            href="/admin/announcements/new"
-            className="border border-[#c3c4c7] rounded-sm p-3 md:p-4 hover:bg-[#f6f7f7] transition-colors"
-          >
-            <h3 className="font-medium text-sm md:text-base text-[#1d2327] mb-1">Create Announcement</h3>
-            <p className="text-xs md:text-sm text-[#646970]">Publish a new announcement</p>
-          </Link>
-          <Link
-            href="/admin/webinars/new"
-            className="border border-[#c3c4c7] rounded-sm p-3 md:p-4 hover:bg-[#f6f7f7] transition-colors"
-          >
-            <h3 className="font-medium text-sm md:text-base text-[#1d2327] mb-1">Schedule Webinar</h3>
-            <p className="text-xs md:text-sm text-[#646970]">Schedule a new webinar</p>
-          </Link>
+      <div className="bg-white rounded-2xl border border-slate-100 p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">Quick Actions</h2>
+            <p className="text-sm text-slate-500">Get started with common tasks</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          {quickActions.map((action) => {
+            const Icon = action.icon;
+            return (
+              <Link
+                key={action.label}
+                href={action.href}
+                className="group flex flex-col items-center p-5 rounded-xl border-2 border-dashed border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/50 transition-all duration-200"
+              >
+                <div className="p-3 rounded-xl bg-slate-100 group-hover:bg-indigo-100 transition-colors mb-3">
+                  <Icon className="w-6 h-6 text-slate-600 group-hover:text-indigo-600 transition-colors" />
+                </div>
+                <span className="font-medium text-sm text-slate-900 group-hover:text-indigo-600 transition-colors">{action.label}</span>
+                <span className="text-xs text-slate-500 mt-0.5">{action.description}</span>
+              </Link>
+            );
+          })}
         </div>
       </div>
     </div>
