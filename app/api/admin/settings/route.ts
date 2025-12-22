@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth';
 import db from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     // Public endpoint - no auth required for reading settings
@@ -18,7 +20,8 @@ export async function GET() {
   }
 }
 
-export async function PUT(request: NextRequest) {
+// Handle both PUT and POST for compatibility
+async function updateSettings(request: NextRequest) {
   try {
     await requireAdmin();
     
@@ -40,4 +43,12 @@ export async function PUT(request: NextRequest) {
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Failed to update settings' }, { status: 500 });
   }
+}
+
+export async function PUT(request: NextRequest) {
+  return updateSettings(request);
+}
+
+export async function POST(request: NextRequest) {
+  return updateSettings(request);
 }
