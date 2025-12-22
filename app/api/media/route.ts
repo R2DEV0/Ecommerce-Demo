@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth';
 import db from '@/lib/db';
-import { unlink } from 'fs/promises';
-import { join } from 'path';
+import { v2 as cloudinary } from 'cloudinary';
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 export async function GET(request: NextRequest) {
   try {
@@ -57,13 +63,15 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Media not found' }, { status: 404 });
     }
     
-    // Delete file from filesystem
+    // Delete file from Cloudinary
     try {
-      const filePath = join(process.cwd(), 'public', media.file_path.replace(/^\//, ''));
-      await unlink(filePath);
+      // The filename field stores the Cloudinary public_id
+      if (media.filename) {
+        await cloudinary.uploader.destroy(media.filename);
+      }
     } catch (err) {
-      console.warn('Failed to delete file from filesystem:', err);
-      // Continue with database deletion even if file deletion fails
+      console.warn('Failed to delete file from Cloudinary:', err);
+      // Continue with database deletion even if Cloudinary deletion fails
     }
     
     // Delete from database
