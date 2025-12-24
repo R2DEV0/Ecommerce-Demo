@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
+import ClientFooter from '@/components/ClientFooter';
 import Link from 'next/link';
 import { X, Filter, Search, SlidersHorizontal, ShoppingBag } from 'lucide-react';
 
@@ -275,7 +275,7 @@ export default function ShopPage() {
           </div>
         </div>
       </div>
-      <Footer />
+      <ClientFooter />
     </>
   );
 }
