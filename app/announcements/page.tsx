@@ -1,5 +1,7 @@
 import db, { initDatabase } from '@/lib/db';
 import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import { Megaphone, Calendar, User } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,35 +20,64 @@ export default async function AnnouncementsPage() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gray-50">
-        <div className="container mx-auto px-4 py-4 md:py-8">
-          <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6 text-gray-900">Announcements</h1>
+      <div className="min-h-screen bg-slate-50">
+        {/* Header */}
+        <div className="bg-white border-b border-slate-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <h1 className="text-3xl font-bold text-slate-900">News & Announcements</h1>
+            <p className="text-slate-600 mt-1">Stay updated with the latest news and updates</p>
+          </div>
+        </div>
+
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {announcements.length === 0 ? (
-            <div className="text-center py-8 md:py-12">
-              <p className="text-gray-600 text-base md:text-lg">No announcements yet.</p>
+            <div className="text-center py-20 bg-white rounded-2xl border border-slate-200">
+              <Megaphone className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+              <p className="text-slate-600 text-lg">No announcements yet</p>
+              <p className="text-slate-500 text-sm mt-2">Check back soon for updates</p>
             </div>
           ) : (
-            <div className="space-y-4 md:space-y-6">
-              {announcements.map((announcement) => (
-                <div key={announcement.id} className="bg-white rounded-lg shadow p-4 md:p-6">
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-2 gap-2">
-                    <h2 className="text-xl md:text-2xl font-bold">{announcement.title}</h2>
-                    <span className="text-xs md:text-sm text-gray-500">
-                      {new Date(announcement.created_at).toLocaleDateString()}
-                    </span>
+            <div className="space-y-6">
+              {announcements.map((announcement, index) => (
+                <article 
+                  key={announcement.id} 
+                  className="bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow"
+                >
+                  <div className="p-6 md:p-8">
+                    <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500 mb-4">
+                      <div className="flex items-center gap-1.5">
+                        <Calendar className="w-4 h-4" />
+                        {new Date(announcement.created_at).toLocaleDateString('en-US', {
+                          month: 'long',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
+                      </div>
+                      {announcement.author_name && (
+                        <div className="flex items-center gap-1.5">
+                          <User className="w-4 h-4" />
+                          {announcement.author_name}
+                        </div>
+                      )}
+                    </div>
+                    
+                    <h2 className="text-xl md:text-2xl font-bold text-slate-900 mb-4">
+                      {announcement.title}
+                    </h2>
+                    
+                    <div className="prose prose-slate max-w-none">
+                      <p className="text-slate-600 whitespace-pre-wrap leading-relaxed">
+                        {announcement.content}
+                      </p>
+                    </div>
                   </div>
-                  {announcement.author_name && (
-                    <p className="text-xs md:text-sm text-gray-600 mb-3 md:mb-4">By {announcement.author_name}</p>
-                  )}
-                  <div className="prose max-w-none">
-                    <p className="text-sm md:text-base text-gray-700 whitespace-pre-wrap">{announcement.content}</p>
-                  </div>
-                </div>
+                </article>
               ))}
             </div>
           )}
         </div>
       </div>
+      <Footer />
     </>
   );
 }

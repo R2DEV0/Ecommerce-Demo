@@ -1,5 +1,6 @@
 import db, { initDatabase } from '@/lib/db';
 import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 import { getCurrentUser } from '@/lib/auth';
 import { notFound, redirect } from 'next/navigation';
 import PasswordChangeForm from '@/components/PasswordChangeForm';
@@ -15,7 +16,8 @@ import {
   ShoppingBag,
   CheckCircle2,
   Clock,
-  GraduationCap
+  GraduationCap,
+  ArrowRight
 } from 'lucide-react';
 
 export default async function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
@@ -25,21 +27,15 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
   const profileUserId = parseInt(id);
   const currentUser = await getCurrentUser();
   
-  // If not logged in, show 404
   if (!currentUser) {
     notFound();
   }
   
-  // Users can only view their own profile unless they're admin
-  // If trying to view another user's profile, redirect to their own
   if (currentUser.id !== profileUserId && currentUser.role !== 'admin') {
     redirect(`/profile/${currentUser.id}`);
   }
 
-  const userResult = await db.execute({
-    sql: 'SELECT * FROM users WHERE id = ?',
-    args: [profileUserId]
-  });
+  const userResult = await db.execute({ sql: 'SELECT * FROM users WHERE id = ?', args: [profileUserId] });
   const user = userResult.rows[0] as any;
   if (!user) {
     notFound();
@@ -77,15 +73,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
   });
   const orders = ordersResult.rows as any[];
 
-  // Get user initials for avatar
-  const initials = user.name
-    .split(' ')
-    .map((n: string) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
-
-  // Calculate stats
+  const initials = user.name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
   const completedCourses = enrollments.filter((e: any) => e.completed).length;
   const totalProgress = enrollments.length > 0
     ? Math.round(enrollments.reduce((sum: number, e: any) => sum + Number(e.progress), 0) / enrollments.length)
@@ -94,275 +82,207 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <div className="container mx-auto px-4 py-4 md:py-8">
-          <div className="max-w-6xl mx-auto">
-            {/* Profile Header */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-4 md:mb-6">
-              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 h-24 md:h-32"></div>
-              <div className="px-4 md:px-8 pb-4 md:pb-8 -mt-12 md:-mt-16">
-                <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 md:gap-6">
-                  <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 md:gap-6">
-                    <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-2xl md:text-4xl font-bold shadow-lg border-4 border-white relative z-10">
-                      {initials}
-                    </div>
-                    <div className="pb-2 relative z-10 text-center sm:text-left">
-                      <div className="pt-8 md:pt-16">
-                        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 md:mb-3">{user.name}</h1>
-                        <div className="flex flex-col sm:flex-row flex-wrap gap-2 md:gap-4 text-xs md:text-sm text-gray-600">
-                          <div className="flex items-center justify-center sm:justify-start gap-2">
-                            <Mail className="w-3 h-3 md:w-4 md:h-4" />
-                            <span className="break-all">{user.email}</span>
-                          </div>
-                          <div className="flex items-center justify-center sm:justify-start gap-2">
-                            <User className="w-3 h-3 md:w-4 md:h-4" />
-                            <span className="capitalize">{user.role}</span>
-                          </div>
-                          <div className="flex items-center justify-center sm:justify-start gap-2">
-                            <Calendar className="w-3 h-3 md:w-4 md:h-4" />
-                            <span className="text-center sm:text-left">Member since {new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+      <div className="min-h-screen bg-slate-50">
+        {/* Profile Header */}
+        <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-700 relative overflow-hidden">
+          <div className="absolute inset-0">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl"></div>
+          </div>
+          
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+            <div className="flex flex-col md:flex-row items-center gap-6">
+              <div className="w-24 h-24 md:w-28 md:h-28 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-white text-3xl md:text-4xl font-bold shadow-xl border border-white/20">
+                {initials}
               </div>
-            </div>
-
-            {/* Stats Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs md:text-sm text-gray-600 mb-1">Enrolled Courses</p>
-                    <p className="text-2xl md:text-3xl font-bold text-gray-900">{enrollments.length}</p>
+              <div className="text-center md:text-left">
+                <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">{user.name}</h1>
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-indigo-100 text-sm">
+                  <div className="flex items-center gap-1.5">
+                    <Mail className="w-4 h-4" />
+                    <span>{user.email}</span>
                   </div>
-                  <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <BookOpen className="w-5 h-5 md:w-6 md:h-6 text-blue-600" />
+                  <div className="flex items-center gap-1.5">
+                    <User className="w-4 h-4" />
+                    <span className="capitalize">{user.role}</span>
                   </div>
-                </div>
-              </div>
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs md:text-sm text-gray-600 mb-1">Completed</p>
-                    <p className="text-2xl md:text-3xl font-bold text-gray-900">{completedCourses}</p>
+                  <div className="flex items-center gap-1.5">
+                    <Calendar className="w-4 h-4" />
+                    <span>Joined {new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
                   </div>
-                  <div className="w-10 h-10 md:w-12 md:h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                    <CheckCircle2 className="w-5 h-5 md:w-6 md:h-6 text-green-600" />
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs md:text-sm text-gray-600 mb-1">Certificates</p>
-                    <p className="text-2xl md:text-3xl font-bold text-gray-900">{certificates.length}</p>
-                  </div>
-                  <div className="w-10 h-10 md:w-12 md:h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <GraduationCap className="w-5 h-5 md:w-6 md:h-6 text-purple-600" />
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs md:text-sm text-gray-600 mb-1">Avg. Progress</p>
-                    <p className="text-2xl md:text-3xl font-bold text-gray-900">{totalProgress}%</p>
-                  </div>
-                  <div className="w-10 h-10 md:w-12 md:h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                    <Clock className="w-5 h-5 md:w-6 md:h-6 text-orange-600" />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-              {/* Left Column - Main Content */}
-              <div className="lg:col-span-2 space-y-4 md:space-y-6">
-                {/* My Courses */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6">
-                  <div className="flex items-center justify-between mb-4 md:mb-6">
-                    <h2 className="text-lg md:text-xl font-bold text-gray-900 flex items-center gap-2">
-                      <BookOpen className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
-                      My Courses
-                    </h2>
-                  </div>
-                  {enrollments.length === 0 ? (
-                    <div className="text-center py-8 md:py-12">
-                      <BookOpen className="w-12 h-12 md:w-16 md:h-16 text-gray-300 mx-auto mb-4" />
-                      <p className="text-sm md:text-base text-gray-600 mb-4">No course enrollments yet.</p>
-                      <Link
-                        href="/courses"
-                        className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm md:text-base"
-                      >
-                        Browse Courses
-                      </Link>
-                    </div>
-                  ) : (
-                    <div className="space-y-3 md:space-y-4">
-                      {enrollments.map((enrollment) => (
-                        <Link
-                          key={enrollment.id}
-                          href={`/courses/${enrollment.course_id}`}
-                          className="block border border-gray-200 rounded-lg p-3 md:p-4 hover:border-blue-300 hover:shadow-md transition-all group"
-                        >
-                          <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
-                            {enrollment.image_url ? (
-                              <img
-                                src={enrollment.image_url}
-                                alt={enrollment.course_title}
-                                className="w-full sm:w-20 h-32 sm:h-20 rounded-lg object-cover"
-                              />
-                            ) : (
-                              <div className="w-full sm:w-20 h-32 sm:h-20 rounded-lg bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
-                                <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
-                              </div>
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold text-base md:text-lg text-gray-900 group-hover:text-blue-600 transition-colors mb-1">
-                                {enrollment.course_title}
-                              </h3>
-                              <p className="text-xs md:text-sm text-gray-600 mb-2 md:mb-3">
-                                Enrolled {new Date(enrollment.enrolled_at).toLocaleDateString()}
-                              </p>
-                              <div className="space-y-2">
-                                <div className="flex items-center justify-between text-xs md:text-sm">
-                                  <span className="text-gray-600">Progress</span>
-                                  <span className="font-semibold text-gray-900">{enrollment.progress}%</span>
-                                </div>
-                                <div className="w-full bg-gray-200 rounded-full h-2">
-                                  <div
-                                    className={`h-2 rounded-full transition-all ${
-                                      enrollment.completed
-                                        ? 'bg-green-500'
-                                        : 'bg-blue-500'
-                                    }`}
-                                    style={{ width: `${enrollment.progress}%` }}
-                                  ></div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  {enrollment.completed ? (
-                                    <>
-                                      <CheckCircle2 className="w-4 h-4 text-green-600" />
-                                      <span className="text-sm text-green-600 font-medium">Completed</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Clock className="w-4 h-4 text-blue-600" />
-                                      <span className="text-sm text-blue-600 font-medium">In Progress</span>
-                                    </>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Recent Orders */}
-                {orders.length > 0 && (
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6">
-                    <div className="flex items-center justify-between mb-4 md:mb-6">
-                      <h2 className="text-lg md:text-xl font-bold text-gray-900 flex items-center gap-2">
-                        <ShoppingBag className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
-                        Recent Orders
-                      </h2>
-                      <Link
-                        href="/profile/orders"
-                        className="text-xs md:text-sm text-blue-600 hover:text-blue-700 font-medium"
-                      >
-                        View All
-                      </Link>
-                    </div>
-                    <div className="space-y-2 md:space-y-3">
-                      {orders.map((order) => (
-                        <div
-                          key={order.id}
-                          className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 md:p-4 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors gap-2"
-                        >
-                          <div className="flex-1">
-                            <p className="font-semibold text-sm md:text-base text-gray-900">Order #{order.id}</p>
-                            <p className="text-xs md:text-sm text-gray-600">
-                              {order.item_count} item{order.item_count !== 1 ? 's' : ''} • {new Date(order.created_at).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <div className="flex items-center justify-between sm:flex-col sm:items-end sm:text-right gap-2">
-                            <p className="font-semibold text-sm md:text-base text-gray-900">${parseFloat(order.total_amount).toFixed(2)}</p>
-                            <span className={`text-xs px-2 py-1 rounded-full ${
-                              order.status === 'completed' ? 'bg-green-100 text-green-800' :
-                              order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-gray-100 text-gray-800'
-                            }`}>
-                              {order.status}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Right Column - Sidebar */}
-              <div className="space-y-4 md:space-y-6">
-                {/* Account Settings */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6">
-                  <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 md:mb-4 flex items-center gap-2">
-                    <User className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
-                    Account Settings
-                  </h2>
-                  <PasswordChangeForm />
-                </div>
-
-                {/* Certificates */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6">
-                  <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 md:mb-4 flex items-center gap-2">
-                    <Award className="w-4 h-4 md:w-5 md:h-5 text-purple-600" />
-                    Certificates
-                  </h2>
-                  {certificates.length === 0 ? (
-                    <div className="text-center py-8">
-                      <GraduationCap className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                      <p className="text-sm text-gray-600">No certificates earned yet.</p>
-                      <p className="text-xs text-gray-500 mt-1">Complete courses to earn certificates!</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {certificates.map((cert) => (
-                        <div
-                          key={cert.id}
-                          className="border-2 border-purple-200 rounded-lg p-4 bg-gradient-to-br from-purple-50 to-indigo-50 hover:shadow-md transition-shadow"
-                        >
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
-                                <GraduationCap className="w-5 h-5 text-purple-600" />
-                                <h3 className="font-bold text-gray-900">{cert.course_title}</h3>
-                              </div>
-                              <p className="text-xs text-gray-600 mb-1">
-                                <span className="font-medium">Cert #:</span> {cert.certificate_number}
-                              </p>
-                              <p className="text-xs text-gray-600">
-                                <span className="font-medium">Issued:</span> {new Date(cert.issued_at).toLocaleDateString()}
-                              </p>
-                            </div>
-                            <div className="text-3xl">🎓</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
           </div>
         </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 -mt-16 relative z-10 mb-8">
+            {[
+              { label: 'Enrolled', value: enrollments.length, icon: BookOpen, color: 'from-blue-500 to-cyan-500' },
+              { label: 'Completed', value: completedCourses, icon: CheckCircle2, color: 'from-emerald-500 to-teal-500' },
+              { label: 'Certificates', value: certificates.length, icon: GraduationCap, color: 'from-purple-500 to-pink-500' },
+              { label: 'Progress', value: `${totalProgress}%`, icon: Clock, color: 'from-orange-500 to-amber-500' },
+            ].map((stat) => {
+              const Icon = stat.icon;
+              return (
+                <div key={stat.label} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-slate-500 mb-1">{stat.label}</p>
+                      <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
+                    </div>
+                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center`}>
+                      <Icon className="w-5 h-5 text-white" />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Main Content */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* My Courses */}
+              <div className="bg-white rounded-2xl border border-slate-200 p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+                    <BookOpen className="w-5 h-5 text-indigo-600" />
+                    My Courses
+                  </h2>
+                  <Link href="/courses" className="text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1">
+                    Browse more <ArrowRight className="w-3 h-3" />
+                  </Link>
+                </div>
+                
+                {enrollments.length === 0 ? (
+                  <div className="text-center py-12">
+                    <BookOpen className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                    <p className="text-slate-600 mb-4">No course enrollments yet</p>
+                    <Link href="/courses" className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 font-medium text-sm transition-colors">
+                      Browse Courses
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {enrollments.map((enrollment) => (
+                      <Link
+                        key={enrollment.id}
+                        href={`/courses/${enrollment.course_id}`}
+                        className="flex gap-4 p-4 rounded-xl border border-slate-200 hover:border-indigo-200 hover:shadow-md transition-all group"
+                      >
+                        {enrollment.image_url ? (
+                          <img src={enrollment.image_url} alt="" className="w-20 h-20 rounded-lg object-cover" />
+                        ) : (
+                          <div className="w-20 h-20 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                            <BookOpen className="w-8 h-8 text-white/50" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors mb-1 truncate">
+                            {enrollment.course_title}
+                          </h3>
+                          <p className="text-xs text-slate-500 mb-3">
+                            Enrolled {new Date(enrollment.enrolled_at).toLocaleDateString()}
+                          </p>
+                          <div className="flex items-center gap-3">
+                            <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                              <div
+                                className={`h-full rounded-full transition-all ${enrollment.completed ? 'bg-emerald-500' : 'bg-indigo-500'}`}
+                                style={{ width: `${enrollment.progress}%` }}
+                              />
+                            </div>
+                            <span className="text-xs font-medium text-slate-600">{enrollment.progress}%</span>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Recent Orders */}
+              {orders.length > 0 && (
+                <div className="bg-white rounded-2xl border border-slate-200 p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+                      <ShoppingBag className="w-5 h-5 text-indigo-600" />
+                      Recent Orders
+                    </h2>
+                  </div>
+                  <div className="space-y-3">
+                    {orders.map((order) => (
+                      <div key={order.id} className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100">
+                        <div>
+                          <p className="font-medium text-slate-900">Order #{order.id}</p>
+                          <p className="text-xs text-slate-500">
+                            {order.item_count} item{order.item_count !== 1 ? 's' : ''} • {new Date(order.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-semibold text-slate-900">${parseFloat(order.total_amount).toFixed(2)}</p>
+                          <span className={`inline-block text-xs px-2 py-0.5 rounded-full ${
+                            order.status === 'completed' ? 'bg-emerald-100 text-emerald-700' :
+                            order.status === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-slate-200 text-slate-600'
+                          }`}>
+                            {order.status}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Sidebar */}
+            <div className="space-y-6">
+              {/* Account Settings */}
+              <div className="bg-white rounded-2xl border border-slate-200 p-6">
+                <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                  <User className="w-5 h-5 text-indigo-600" />
+                  Account Settings
+                </h2>
+                <PasswordChangeForm />
+              </div>
+
+              {/* Certificates */}
+              <div className="bg-white rounded-2xl border border-slate-200 p-6">
+                <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                  <Award className="w-5 h-5 text-purple-600" />
+                  Certificates
+                </h2>
+                {certificates.length === 0 ? (
+                  <div className="text-center py-8">
+                    <GraduationCap className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                    <p className="text-sm text-slate-600">No certificates earned yet</p>
+                    <p className="text-xs text-slate-500 mt-1">Complete courses to earn certificates!</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {certificates.map((cert) => (
+                      <div key={cert.id} className="p-4 rounded-xl bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-100">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <h3 className="font-semibold text-slate-900 text-sm mb-1">{cert.course_title}</h3>
+                            <p className="text-xs text-slate-500">
+                              Issued {new Date(cert.issued_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div className="text-2xl">🎓</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+      <Footer />
     </>
   );
 }

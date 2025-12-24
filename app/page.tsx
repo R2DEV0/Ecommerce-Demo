@@ -3,6 +3,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import StatsCounter from "@/components/StatsCounter";
 import db, { initDatabase } from "@/lib/db";
+import { ArrowRight, Sparkles, BookOpen, Users, Globe } from "lucide-react";
 
 export const dynamic = 'force-dynamic';
 
@@ -24,73 +25,91 @@ export default async function Home() {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-white">
+      <main className="min-h-screen bg-slate-50">
         {/* Hero Section */}
-        <section className="relative bg-gradient-to-br from-primary-600 via-purple-600 to-purple-700 text-white">
-          <div className="absolute inset-0 bg-black opacity-20"></div>
-          <div className="relative container mx-auto px-4 py-16 md:py-24 lg:py-32">
+        <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900">
+          {/* Animated background elements */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute -top-40 -right-40 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl"></div>
+            <div className="absolute top-1/2 -left-40 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl"></div>
+          </div>
+          
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
             <div className="max-w-4xl mx-auto text-center">
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold mb-4 md:mb-6 leading-tight px-2">
-                The Center for Depth and Complexity
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 text-indigo-200 text-sm mb-8 backdrop-blur-sm">
+                <Sparkles className="w-4 h-4" />
+                <span>Transforming Education Worldwide</span>
+              </div>
+              
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight tracking-tight">
+                The Center for{' '}
+                <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
+                  Depth and Complexity
+                </span>
               </h1>
-              <p className="text-base sm:text-lg md:text-xl lg:text-2xl mb-6 md:mb-8 text-blue-100 max-w-2xl mx-auto px-4">
-                Empowering learners to be independent thinkers and creative problem-solvers
+              
+              <p className="text-lg md:text-xl text-slate-300 mb-10 max-w-2xl mx-auto leading-relaxed">
+                Empowering learners to be independent thinkers and creative problem-solvers through research-based frameworks
               </p>
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
+              
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
                   href="/courses"
-                  className="bg-white text-primary-600 px-6 py-3 sm:px-8 sm:py-4 rounded-lg font-semibold text-base sm:text-lg hover:bg-blue-50 transition-colors shadow-lg"
+                  className="group inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-semibold text-slate-900 bg-white rounded-xl hover:bg-slate-50 transition-all shadow-lg shadow-white/25 hover:shadow-xl"
                 >
                   Explore Courses
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Link>
                 <Link
                   href="/shop"
-                  className="bg-action-500 text-white px-6 py-3 sm:px-8 sm:py-4 rounded-lg font-semibold text-base sm:text-lg hover:bg-action-600 transition-colors shadow-lg border-2 border-white"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg shadow-indigo-500/25"
                 >
-                  Shop Products
+                  Shop Resources
                 </Link>
               </div>
             </div>
           </div>
-          {/* Decorative wave */}
+          
+          {/* Bottom wave */}
           <div className="absolute bottom-0 left-0 right-0">
-            <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M0 120L60 105C120 90 240 60 360 45C480 30 600 30 720 37.5C840 45 960 60 1080 67.5C1200 75 1320 75 1380 75L1440 75V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="white"/>
+            <svg viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
+              <path d="M0 80L60 70C120 60 240 40 360 30C480 20 600 20 720 25C840 30 960 40 1080 45C1200 50 1320 50 1380 50L1440 50V80H1380C1320 80 1200 80 1080 80C960 80 840 80 720 80C600 80 480 80 360 80C240 80 120 80 60 80H0Z" fill="#f8fafc"/>
             </svg>
           </div>
         </section>
 
         {/* Stats Section */}
-        <section className="bg-white py-20 md:py-24">
-          <div className="container mx-auto px-4">
+        <section className="py-20 md:py-24 bg-slate-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 mb-4">
                 Depth and Complexity is Growing!
               </h2>
-              <p className="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+              <p className="text-lg text-slate-600 max-w-2xl mx-auto">
                 Join thousands of educators worldwide who are transforming their classrooms
               </p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 max-w-7xl mx-auto">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
               <StatsCounter 
                 end={9} 
                 label="Countries" 
-                bgColor="bg-gradient-to-br from-blue-50 to-blue-100" 
+                bgColor="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow" 
               />
               <StatsCounter 
                 end={45} 
                 label="States" 
-                bgColor="bg-gradient-to-br from-purple-50 to-purple-100" 
+                bgColor="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow" 
               />
               <StatsCounter 
                 end={102002} 
                 label="Classrooms" 
-                bgColor="bg-gradient-to-br from-indigo-50 to-indigo-100" 
+                bgColor="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow" 
               />
               <StatsCounter 
                 end={2406124} 
                 label="Students" 
-                bgColor="bg-gradient-to-br from-pink-50 to-pink-100" 
+                bgColor="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow" 
               />
             </div>
           </div>
@@ -98,43 +117,53 @@ export default async function Home() {
 
         {/* Featured Products Section */}
         {featuredProducts.length > 0 && (
-          <section className="py-12 md:py-16 bg-primary-50">
-            <div className="container mx-auto px-4">
-              <div className="text-center mb-8 md:mb-12">
-                <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 md:mb-4">
-                  Don&apos;t Miss Our Best-Selling Products
-                </h2>
-                <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto px-4">
-                  Essential tools and resources for implementing Depth and Complexity in your classroom
-                </p>
+          <section className="py-20 md:py-24 bg-white">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-12">
+                <div>
+                  <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-3">
+                    Best-Selling Resources
+                  </h2>
+                  <p className="text-lg text-slate-600 max-w-xl">
+                    Essential tools for implementing Depth and Complexity in your classroom
+                  </p>
+                </div>
+                <Link 
+                  href="/shop"
+                  className="mt-4 md:mt-0 inline-flex items-center gap-2 text-indigo-600 font-semibold hover:text-indigo-700 transition-colors"
+                >
+                  View all products
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 max-w-7xl mx-auto">
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {featuredProducts.map((product) => (
                   <Link
                     key={product.id}
                     href={`/shop/${product.id}`}
-                    className="bg-white rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 overflow-hidden group"
+                    className="group bg-slate-50 rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 border border-slate-100 hover:border-indigo-200"
                   >
                     {product.image_url && (
-                      <div className="aspect-video bg-gray-200 overflow-hidden">
+                      <div className="aspect-[4/3] bg-slate-200 overflow-hidden">
                         <img
                           src={product.image_url}
                           alt={product.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                       </div>
                     )}
-                    <div className="p-4 md:p-6">
-                      <h3 className="font-semibold text-base md:text-lg mb-2 text-gray-900 group-hover:text-primary-600 transition-colors">
+                    <div className="p-5">
+                      <h3 className="font-semibold text-lg text-slate-900 group-hover:text-indigo-600 transition-colors mb-2 line-clamp-1">
                         {product.name}
                       </h3>
-                      <p className="text-gray-600 text-xs md:text-sm mb-3 md:mb-4 line-clamp-2">{product.description}</p>
+                      <p className="text-slate-600 text-sm mb-4 line-clamp-2">{product.description}</p>
                       <div className="flex justify-between items-center">
-                        <span className="text-lg md:text-xl font-bold text-primary-600">
+                        <span className="text-xl font-bold text-slate-900">
                           ${parseFloat(product.price).toFixed(2)}
                         </span>
                         {product.version_count > 0 && (
-                          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                          <span className="text-xs text-slate-500 bg-slate-200 px-2 py-1 rounded-lg">
                             {product.version_count} options
                           </span>
                         )}
@@ -143,40 +172,38 @@ export default async function Home() {
                   </Link>
                 ))}
               </div>
-              <div className="text-center mt-6 md:mt-8">
-                <Link
-                  href="/shop"
-                  className="inline-block bg-action-500 text-white px-6 py-2 md:px-8 md:py-3 rounded-lg font-semibold hover:bg-action-600 transition-colors shadow-lg text-sm md:text-base"
-                >
-                  View All Products
-                </Link>
-              </div>
             </div>
           </section>
         )}
 
         {/* Features Section */}
-        <section className="py-12 md:py-16 bg-white">
-          <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto">
-              <div className="text-center p-4 md:p-6">
-                <div className="text-4xl md:text-5xl mb-3 md:mb-4">📚</div>
-                <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2">Professional Development</h3>
-                <p className="text-sm md:text-base text-gray-600">
+        <section className="py-20 md:py-24 bg-slate-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="bg-white rounded-2xl p-8 border border-slate-200 hover:border-indigo-200 hover:shadow-lg transition-all">
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mb-6">
+                  <BookOpen className="w-7 h-7 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 mb-3">Professional Development</h3>
+                <p className="text-slate-600 leading-relaxed">
                   Comprehensive workshops and training programs to help you master the Depth and Complexity framework
                 </p>
               </div>
-              <div className="text-center p-4 md:p-6">
-                <div className="text-4xl md:text-5xl mb-3 md:mb-4">🛠️</div>
-                <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2">Teaching Resources</h3>
-                <p className="text-sm md:text-base text-gray-600">
+              <div className="bg-white rounded-2xl p-8 border border-slate-200 hover:border-indigo-200 hover:shadow-lg transition-all">
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center mb-6">
+                  <Users className="w-7 h-7 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 mb-3">Teaching Resources</h3>
+                <p className="text-slate-600 leading-relaxed">
                   High-quality products and materials designed to support implementation in your classroom
                 </p>
               </div>
-              <div className="text-center p-4 md:p-6">
-                <div className="text-4xl md:text-5xl mb-3 md:mb-4">🌐</div>
-                <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2">Global Community</h3>
-                <p className="text-sm md:text-base text-gray-600">
+              <div className="bg-white rounded-2xl p-8 border border-slate-200 hover:border-indigo-200 hover:shadow-lg transition-all">
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center mb-6">
+                  <Globe className="w-7 h-7 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 mb-3">Global Community</h3>
+                <p className="text-slate-600 leading-relaxed">
                   Join thousands of educators worldwide who are transforming student learning experiences
                 </p>
               </div>
@@ -185,24 +212,30 @@ export default async function Home() {
         </section>
 
         {/* CTA Section */}
-        <section className="py-12 md:py-16 bg-gradient-to-r from-primary-600 via-purple-600 to-purple-700 text-white">
-          <div className="container mx-auto px-4 text-center">
-            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-3 md:mb-4 px-4">
+        <section className="py-20 md:py-24 bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-700 relative overflow-hidden">
+          <div className="absolute inset-0">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl"></div>
+          </div>
+          
+          <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6">
               Ready to Transform Your Classroom?
             </h2>
-            <p className="text-base md:text-xl mb-6 md:mb-8 text-blue-100 max-w-2xl mx-auto px-4">
-              Start your journey with Depth and Complexity today
+            <p className="text-lg md:text-xl text-indigo-100 mb-10 max-w-2xl mx-auto">
+              Start your journey with Depth and Complexity today and unlock your students&apos; potential
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 href="/register"
-                className="bg-white text-primary-600 px-6 py-3 sm:px-8 sm:py-4 rounded-lg font-semibold text-base sm:text-lg hover:bg-blue-50 transition-colors shadow-lg"
+                className="group inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-semibold text-indigo-600 bg-white rounded-xl hover:bg-slate-50 transition-all shadow-lg"
               >
                 Get Started Free
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
               <Link
                 href="/courses"
-                className="bg-action-500 text-white px-6 py-3 sm:px-8 sm:py-4 rounded-lg font-semibold text-base sm:text-lg hover:bg-action-600 transition-colors shadow-lg border-2 border-white"
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-semibold text-white border-2 border-white/30 rounded-xl hover:bg-white/10 transition-all"
               >
                 Browse Courses
               </Link>
