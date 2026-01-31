@@ -79,7 +79,7 @@ export async function DELETE(
 
     // Check if user exists
     const userResult = await db.execute({
-      sql: 'SELECT id FROM users WHERE id = ?',
+      sql: 'SELECT id, role FROM users WHERE id = ?',
       args: [userId]
     });
     if (userResult.rows.length === 0) {
@@ -89,7 +89,43 @@ export async function DELETE(
       );
     }
 
-    // Delete user (cascade will handle related records)
+    const user = userResult.rows[0] as any;
+    
+    // Prevent deleting yourself
+    const currentUser = await requireAdmin();
+    if (currentUser.id === userId) {
+      return NextResponse.json(
+        { error: 'You cannot delete your own account' },
+        { status: 400 }
+      );
+    }
+
+    // Delete related records that don't have CASCADE
+    // 1. Delete announcements authored by this user
+    await db.execute({
+      sql: 'DELETE FROM announcements WHERE author_id = ?',
+      args: [userId]
+    });
+
+    // 2. Delete orders (order_items will cascade)
+    await db.execute({
+      sql: 'DELETE FROM orders WHERE user_id = ?',
+      args: [userId]
+    });
+
+    // 3. Update media to remove uploaded_by reference (set to NULL)
+    await db.execute({
+      sql: 'UPDATE media SET uploaded_by = NULL WHERE uploaded_by = ?',
+      args: [userId]
+    });
+
+    // 4. Update child users to remove parent_user_id reference
+    await db.execute({
+      sql: 'UPDATE users SET parent_user_id = NULL WHERE parent_user_id = ?',
+      args: [userId]
+    });
+
+    // 5. Now delete the user (cascade will handle course_enrollments, certificates, etc.)
     await db.execute({
       sql: 'DELETE FROM users WHERE id = ?',
       args: [userId]
@@ -105,7 +141,7 @@ export async function DELETE(
     }
     console.error('User delete error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: error.message || 'Internal server error' },
       { status: 500 }
     );
   }
