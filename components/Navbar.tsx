@@ -5,21 +5,14 @@ import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import { useCart } from '@/contexts/CartContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { ShoppingBag, User, Menu, X, LogOut, LayoutDashboard } from 'lucide-react';
-
-// Helper function to check if auth cookie exists (synchronous)
-function hasAuthCookie(): boolean {
-  if (typeof document === 'undefined') return false;
-  return document.cookie.split(';').some(c => c.trim().startsWith('auth-token='));
-}
 
 export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
   const { toggleCart, getTotalItems } = useCart();
-  // Initialize with a placeholder if cookie exists to prevent flash
-  const [user, setUser] = useState<any>(hasAuthCookie() ? { loading: true } : null);
-  const [loading, setLoading] = useState(true);
+  const { user, logout } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [siteLogo, setSiteLogo] = useState('/media/newlogo.jpg');
@@ -28,22 +21,6 @@ export default function Navbar() {
   const totalItems = getTotalItems();
 
   useEffect(() => {
-    // Fetch user data
-    fetch('/api/auth/me')
-      .then(res => res.json())
-      .then(data => {
-        if (data.user) {
-          setUser(data.user);
-        } else {
-          setUser(null);
-        }
-        setLoading(false);
-      })
-      .catch(() => {
-        setUser(null);
-        setLoading(false);
-      });
-    
     fetch('/api/admin/settings')
       .then(res => res.json())
       .then(data => {
@@ -67,8 +44,7 @@ export default function Navbar() {
   }, [dropdownOpen]);
 
   const handleLogout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    setUser(null);
+    await logout();
     setDropdownOpen(false);
     router.push('/');
     router.refresh();
@@ -147,19 +123,18 @@ export default function Navbar() {
 
               {/* Desktop Auth */}
               <div className="hidden md:flex items-center gap-2">
-                {user ? (
+                {user && !(user as any).loading ? (
                   <div className="relative" ref={dropdownRef}>
                     <button
-                      onClick={() => !user.loading && setDropdownOpen(!dropdownOpen)}
+                      onClick={() => setDropdownOpen(!dropdownOpen)}
                       className="flex items-center gap-2 p-1.5 rounded-full hover:bg-slate-100 transition-all"
-                      disabled={user.loading}
                     >
                       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-sm font-semibold shadow-lg shadow-indigo-500/30">
-                        {user.loading ? 'U' : (user.name?.charAt(0).toUpperCase() || 'U')}
+                        {user.name?.charAt(0).toUpperCase() || 'U'}
                       </div>
                     </button>
                     
-                    {dropdownOpen && !user.loading && (
+                    {dropdownOpen && (
                       <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 animate-scale-in overflow-hidden">
                         <div className="px-4 py-3 border-b border-slate-100">
                           <p className="font-semibold text-sm text-slate-900">{user.name}</p>
@@ -196,6 +171,10 @@ export default function Navbar() {
                         </div>
                       </div>
                     )}
+                  </div>
+                ) : user && (user as any).loading ? (
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-sm font-semibold shadow-lg shadow-indigo-500/30">
+                    U
                   </div>
                 ) : (
                   <div className="flex items-center">
@@ -252,55 +231,53 @@ export default function Navbar() {
             </div>
             
             {/* User Section */}
-            {user ? (
+            {user && !(user as any).loading ? (
               <div className="pt-4 border-t border-slate-100">
-                {user.loading ? (
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold">
-                      U
-                    </div>
-                    <div className="flex-1">
-                      <div className="h-4 bg-slate-200 rounded w-24 mb-2 animate-pulse"></div>
-                      <div className="h-3 bg-slate-200 rounded w-32 animate-pulse"></div>
-                    </div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold">
+                    {user.name?.charAt(0).toUpperCase()}
                   </div>
-                ) : (
-                  <>
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold">
-                        {user.name?.charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <p className="font-semibold text-slate-900">{user.name}</p>
-                        <p className="text-sm text-slate-500">{user.email}</p>
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <Link
-                        href={`/profile/${user.id}`}
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="px-4 py-2 text-slate-600 hover:bg-slate-50 rounded-xl text-sm font-medium"
-                      >
-                        Profile
-                      </Link>
-                      {user.role === 'admin' && (
-                        <Link
-                          href="/admin"
-                          onClick={() => setMobileMenuOpen(false)}
-                          className="px-4 py-2 text-slate-600 hover:bg-slate-50 rounded-xl text-sm font-medium"
-                        >
-                          Admin Panel
-                        </Link>
-                      )}
-                      <button
-                        onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
-                        className="px-4 py-2 text-left text-red-600 hover:bg-red-50 rounded-xl text-sm font-medium"
-                      >
-                        Sign out
-                      </button>
-                    </div>
-                  </>
-                )}
+                  <div>
+                    <p className="font-semibold text-slate-900">{user.name}</p>
+                    <p className="text-sm text-slate-500">{user.email}</p>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <Link
+                    href={`/profile/${user.id}`}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="px-4 py-2 text-slate-600 hover:bg-slate-50 rounded-xl text-sm font-medium"
+                  >
+                    Profile
+                  </Link>
+                  {user.role === 'admin' && (
+                    <Link
+                      href="/admin"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="px-4 py-2 text-slate-600 hover:bg-slate-50 rounded-xl text-sm font-medium"
+                    >
+                      Admin Panel
+                    </Link>
+                  )}
+                  <button
+                    onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
+                    className="px-4 py-2 text-left text-red-600 hover:bg-red-50 rounded-xl text-sm font-medium"
+                  >
+                    Sign out
+                  </button>
+                </div>
+              </div>
+            ) : user && (user as any).loading ? (
+              <div className="pt-4 border-t border-slate-100">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold">
+                    U
+                  </div>
+                  <div className="flex-1">
+                    <div className="h-4 bg-slate-200 rounded w-24 mb-2 animate-pulse"></div>
+                    <div className="h-3 bg-slate-200 rounded w-32 animate-pulse"></div>
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="pt-4 border-t border-slate-100 flex flex-col gap-2">

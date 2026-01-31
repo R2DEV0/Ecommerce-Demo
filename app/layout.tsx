@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Chatbot from "@/components/Chatbot";
 import { CartProvider } from "@/contexts/CartContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 import Cart from "@/components/Cart";
 
 import { getSiteSettings } from "@/lib/siteSettings";
@@ -47,11 +48,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <CartProvider>
-          {children}
-          <Cart />
-          <Chatbot />
-        </CartProvider>
+        <AuthProvider>
+          <CartProvider>
+            {children}
+            <Cart />
+            <Chatbot />
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );
