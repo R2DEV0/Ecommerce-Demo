@@ -46,7 +46,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const res = await fetch('/api/auth/me');
+      const res = await fetch('/api/auth/me', {
+        credentials: 'include', // Ensure cookies are sent
+      });
       const data = await res.json();
       if (data.user) {
         setUser(data.user);
@@ -65,7 +67,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST' });
+    await fetch('/api/auth/logout', { 
+      method: 'POST',
+      credentials: 'include', // Ensure cookies are sent
+    });
     setUser(null);
   };
 

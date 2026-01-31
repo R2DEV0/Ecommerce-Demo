@@ -4,10 +4,12 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
+import { useAuth } from '@/contexts/AuthContext';
 import { Mail, Lock, User, ArrowRight, Loader2 } from 'lucide-react';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { refreshUser } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -42,6 +44,7 @@ export default function RegisterPage() {
           email: formData.email,
           password: formData.password,
         }),
+        credentials: 'include', // Ensure cookies are sent
       });
 
       const data = await res.json();
@@ -52,6 +55,9 @@ export default function RegisterPage() {
         return;
       }
 
+      // Refresh the auth context to update user state
+      await refreshUser();
+      
       router.push('/');
       router.refresh();
     } catch (err) {
