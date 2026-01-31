@@ -20,9 +20,9 @@ export async function PUT(
       );
     }
 
-    // Check if email is taken by another user
+    // Check if email is taken by another user (case-insensitive)
     const existingResult = await db.execute({
-      sql: 'SELECT id FROM users WHERE email = ? AND id != ?',
+      sql: 'SELECT id FROM users WHERE LOWER(email) = LOWER(?) AND id != ?',
       args: [email, userId]
     });
     if (existingResult.rows.length > 0) {

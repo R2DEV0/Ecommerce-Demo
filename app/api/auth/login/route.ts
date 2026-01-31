@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await db.execute({
-      sql: 'SELECT * FROM users WHERE email = ?',
+      sql: 'SELECT * FROM users WHERE LOWER(email) = LOWER(?)',
       args: [email]
     });
     const user = result.rows[0] as any;

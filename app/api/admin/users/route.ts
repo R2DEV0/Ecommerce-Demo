@@ -15,9 +15,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user exists
+    // Check if user exists (case-insensitive)
     const existingResult = await db.execute({
-      sql: 'SELECT id FROM users WHERE email = ?',
+      sql: 'SELECT id FROM users WHERE LOWER(email) = LOWER(?)',
       args: [email]
     });
     if (existingResult.rows.length > 0) {
