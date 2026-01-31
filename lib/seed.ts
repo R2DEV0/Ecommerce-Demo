@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 
 export async function seedDatabase() {
   console.log('Seeding database...');
+  console.log('Database URL:', process.env.TURSO_DATABASE_URL || process.env.TURSO_URL || 'file:local.db');
 
   // Initialize database tables first
   await initDatabase();
@@ -912,11 +913,24 @@ export async function seedDatabase() {
     },
   ];
 
-  // Get admin user id
-  const adminUser = await db.execute({
+  // Get admin user id (try both possible admin emails)
+  let adminUser = await db.execute({
     sql: 'SELECT id FROM users WHERE email = ?',
     args: ['admin@example.com']
   });
+  if (adminUser.rows.length === 0) {
+    adminUser = await db.execute({
+      sql: 'SELECT id FROM users WHERE email = ?',
+      args: ['admin@depthcomplexity.com']
+    });
+  }
+  if (adminUser.rows.length === 0) {
+    // Get any admin user
+    adminUser = await db.execute({
+      sql: 'SELECT id FROM users WHERE role = ? LIMIT 1',
+      args: ['admin']
+    });
+  }
   const adminId = adminUser.rows[0] ? Number((adminUser.rows[0] as any).id) : 1;
 
   for (const announcement of announcements) {
@@ -929,6 +943,30 @@ export async function seedDatabase() {
 
   console.log(`Created ${announcements.length} announcements`);
 
+  // Verify what was created
+  const finalProductCount = await db.execute('SELECT COUNT(*) as count FROM products');
+  const finalCourseCount = await db.execute('SELECT COUNT(*) as count FROM courses');
+  const finalWebinarCount = await db.execute('SELECT COUNT(*) as count FROM webinars');
+  const finalAnnouncementCount = await db.execute('SELECT COUNT(*) as count FROM announcements');
+  const finalTagCount = await db.execute('SELECT COUNT(*) as count FROM tags');
+
+  console.log('\n=== Seeding Summary ===');
+  console.log(`Products: ${(finalProductCount.rows[0] as any).count}`);
+  console.log(`Courses: ${(finalCourseCount.rows[0] as any).count}`);
+  console.log(`Webinars: ${(finalWebinarCount.rows[0] as any).count}`);
+  console.log(`Announcements: ${(finalAnnouncementCount.rows[0] as any).count}`);
+  console.log(`Tags: ${(finalTagCount.rows[0] as any).count}`);
+  console.log('======================\n');
+
   console.log('Database seeding completed!');
-  return { message: 'Database seeded successfully' };
+  return { 
+    message: 'Database seeded successfully',
+    summary: {
+      products: Number((finalProductCount.rows[0] as any).count),
+      courses: Number((finalCourseCount.rows[0] as any).count),
+      webinars: Number((finalWebinarCount.rows[0] as any).count),
+      announcements: Number((finalAnnouncementCount.rows[0] as any).count),
+      tags: Number((finalTagCount.rows[0] as any).count),
+    }
+  };
 }
