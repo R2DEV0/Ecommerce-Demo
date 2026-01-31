@@ -28,15 +28,23 @@ function hasAuthCookie(): boolean {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   // Check cookie synchronously on initialization to prevent flash
-  const [user, setUser] = useState<User | null | { loading: true }>(() => {
-    if (typeof window !== 'undefined' && hasAuthCookie()) {
-      return { loading: true } as any;
+  const [user, setUser] = useState<User | null>(null);
+  // If cookie exists, we need to check auth; otherwise we know user is null
+  const [loading, setLoading] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return hasAuthCookie();
     }
-    return null;
+    return true; // SSR: always start loading
   });
-  const [loading, setLoading] = useState(true);
 
   const fetchUser = async () => {
+    // If no cookie, skip fetch and set loading to false immediately
+    if (typeof window !== 'undefined' && !hasAuthCookie()) {
+      setUser(null);
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch('/api/auth/me');
       const data = await res.json();
