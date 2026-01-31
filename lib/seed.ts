@@ -7,12 +7,20 @@ export async function seedDatabase() {
   // Initialize database tables first
   await initDatabase();
 
-  // Check if already seeded
-  const productCount = await db.execute('SELECT COUNT(*) as count FROM products');
-  if (Number((productCount.rows[0] as any).count) > 0) {
-    console.log('Database already seeded, skipping...');
-    return { message: 'Database already seeded' };
-  }
+  // Clear existing seed data (but keep users and settings)
+  console.log('Clearing existing seed data...');
+  await db.execute('DELETE FROM product_tags');
+  await db.execute('DELETE FROM product_versions');
+  await db.execute('DELETE FROM products');
+  await db.execute('DELETE FROM lesson_progress');
+  await db.execute('DELETE FROM course_enrollments');
+  await db.execute('DELETE FROM lessons');
+  await db.execute('DELETE FROM courses');
+  await db.execute('DELETE FROM webinar_registrations');
+  await db.execute('DELETE FROM webinars');
+  await db.execute('DELETE FROM announcements');
+  await db.execute('DELETE FROM tags');
+  console.log('Existing seed data cleared.');
 
   // Create additional admin user
   const adminEmail = 'admin@depthcomplexity.com';
