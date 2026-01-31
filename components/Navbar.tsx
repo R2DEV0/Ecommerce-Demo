@@ -12,7 +12,7 @@ export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
   const { toggleCart, getTotalItems } = useCart();
-  const { user, logout } = useAuth();
+  const { user, loading: authLoading, logout } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [siteLogo, setSiteLogo] = useState('/media/newlogo.jpg');
@@ -123,7 +123,11 @@ export default function Navbar() {
 
               {/* Desktop Auth */}
               <div className="hidden md:flex items-center gap-2">
-                {user && !(user as any).loading ? (
+                {authLoading ? (
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-sm font-semibold shadow-lg shadow-indigo-500/30">
+                    U
+                  </div>
+                ) : user ? (
                   <div className="relative" ref={dropdownRef}>
                     <button
                       onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -171,10 +175,6 @@ export default function Navbar() {
                         </div>
                       </div>
                     )}
-                  </div>
-                ) : user && (user as any).loading ? (
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-sm font-semibold shadow-lg shadow-indigo-500/30">
-                    U
                   </div>
                 ) : (
                   <div className="flex items-center">
@@ -231,7 +231,19 @@ export default function Navbar() {
             </div>
             
             {/* User Section */}
-            {user && !(user as any).loading ? (
+            {authLoading ? (
+              <div className="pt-4 border-t border-slate-100">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold">
+                    U
+                  </div>
+                  <div className="flex-1">
+                    <div className="h-4 bg-slate-200 rounded w-24 mb-2 animate-pulse"></div>
+                    <div className="h-3 bg-slate-200 rounded w-32 animate-pulse"></div>
+                  </div>
+                </div>
+              </div>
+            ) : user ? (
               <div className="pt-4 border-t border-slate-100">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold">
@@ -265,18 +277,6 @@ export default function Navbar() {
                   >
                     Sign out
                   </button>
-                </div>
-              </div>
-            ) : user && (user as any).loading ? (
-              <div className="pt-4 border-t border-slate-100">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold">
-                    U
-                  </div>
-                  <div className="flex-1">
-                    <div className="h-4 bg-slate-200 rounded w-24 mb-2 animate-pulse"></div>
-                    <div className="h-3 bg-slate-200 rounded w-32 animate-pulse"></div>
-                  </div>
                 </div>
               </div>
             ) : (
