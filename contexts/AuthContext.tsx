@@ -27,19 +27,17 @@ function hasAuthCookie(): boolean {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  // Check cookie synchronously on initialization to prevent flash
+  // Always start with null user and loading true to prevent hydration mismatches
+  // This ensures server and client render the same initial HTML
   const [user, setUser] = useState<User | null>(null);
-  // If cookie exists, we need to check auth; otherwise we know user is null
-  const [loading, setLoading] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return hasAuthCookie();
-    }
-    return true; // SSR: always start loading
-  });
+  const [loading, setLoading] = useState(true);
 
   const fetchUser = async () => {
+    // Only check cookie after component has mounted (client-side only)
+    if (typeof window === 'undefined') return;
+    
     // If no cookie, skip fetch and set loading to false immediately
-    if (typeof window !== 'undefined' && !hasAuthCookie()) {
+    if (!hasAuthCookie()) {
       setUser(null);
       setLoading(false);
       return;
@@ -72,10 +70,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       credentials: 'include', // Ensure cookies are sent
     });
     setUser(null);
+    setLoading(false);
   };
 
   useEffect(() => {
     fetchUser();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
